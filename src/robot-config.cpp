@@ -45,8 +45,8 @@ motor rightTop = motor(PORT13, ratio6_1, true);
 motor_group rightDrive = motor_group(rightBack, rightFront, rightTop);
 
 // Intake motors
-motor intakeUpper = motor(PORT20, ratio18_1);
-motor intakeLower = motor(PORT19, ratio18_1); // 5.5W
+motor intakeUpper = motor(PORT20, ratio18_1, true);
+motor intakeLower = motor(PORT19, ratio18_1, true); // 5.5W
 
 // Pneumatics
 digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.A);

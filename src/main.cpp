@@ -28,6 +28,7 @@ double yOffsetGPS = 5; // In inches
 
 // ---------------------------Responsive Functions---------------------------------
 
+
 // Check controller inputs and respond
 // Tank drive with triggers controlling clamp and intake
 void checkInputs(){
@@ -39,7 +40,7 @@ void checkInputs(){
   // Intake control
   if (Controller1.ButtonR1.pressing()) {
     intakeLower.spin(fwd,100,pct);
-    intakeUpper.spin(fwd,70,pct);
+    intakeUpper.spin(fwd,100,pct);
   } else if (Controller1.ButtonR2.pressing()) {
     intakeLower.spin(reverse,30,pct);
     intakeUpper.spin(reverse,30,pct);
@@ -50,9 +51,9 @@ void checkInputs(){
 
   // Clamp control
   if (Controller1.ButtonL2.pressing()) {
-    clampPneumatic.set(true);
-  } else if (Controller1.ButtonL1.pressing()) {
     clampPneumatic.set(false);
+  } else if (Controller1.ButtonL1.pressing()) {
+    clampPneumatic.set(true);
   }
 }
 
@@ -380,22 +381,40 @@ void pre_auton(void) {
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
 
+  // Set the clamp to be correct;
+  clampPneumatic.set(false);
+
   // Initialize Robot Configuration
   vexcodeInit();
 }
 
 //Function run during the autonomous period
 void autonomous(void) {
-  /*
-  //If statement switch uses the variable at the top of the program to determine what auton to run.
-  if (skillsMode == true){
-    autonSkillsAuton(); //Calls the Autonomous Skills auton
-  } else if (redSide == true){
-    farGameAuton(); //Call the far side auton
-  } else {
-    closeGameAuton(); //Call the close side auton
-  }
-  */
+
+  // Drive backwards up to the goal
+  leftDrive.spinFor(reverse, 2300, deg, 70, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2300, deg, 70, velocityUnits::pct);
+  
+  // Continue driving backwards
+  leftDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct);
+
+  // Stop the drivetrain not too hard
+  leftDrive.stop(coast);
+  rightDrive.stop(coast);
+
+  // Clamp onto the goal
+  clampPneumatic.set(true);
+
+  // Wait a little bit
+  wait(400, msec);
+
+  // Drive backwards to safety
+  leftDrive.spinFor(fwd, 500, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 10, velocityUnits::pct);
+
+  // Score?!!!!
+  intakeUpper.spinFor(3,sec, 70, velocityUnits::pct);
 }
 
 //Code run during the driver control period
