@@ -14,7 +14,7 @@ class SwerveWheel {
     double mot2Vel = 0;
     directionType mot2Dir = fwd;
 
-    PID turnToPID = PID(1,1,1);
+    PID turnToPID = PID(1,1,1,10);
   public:
     // Motors and sensor for this specific wheel
     SwerveWheel(motor motor1, motor motor2, rotation rotation){

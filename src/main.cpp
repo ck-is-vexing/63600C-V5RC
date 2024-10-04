@@ -3,6 +3,7 @@
 // *******************************************************************************
 
 #include "vex.h" // Include the vex header
+#include "func/PID.cpp" // Include the PID class
 using namespace vex; // Set the namespace to vex
 
 // A global instance of competition
@@ -13,9 +14,9 @@ competition Competition;
 // *******************************Global Vars*************************************
 // *******************************************************************************
 
-bool skillsMode = true; // A toggle that says whether to run this as the game program or skills program. This is to make it easy to switch between them when uploading code.
-bool gpsAllowed = true; // A toggle for whether the field has GPS strips or not
-bool farSide = false; // A toggle to tell where the robot is starting on the field
+bool skillsMode = false; // A toggle for whether to run this as the game program or skills program. This is to make it easy to switch between them when uploading code.
+bool gpsAllowed = false; // A toggle for whether the field has GPS strips or not
+bool redSide = false; // A toggle to tell where the robot is starting on the field
 
 double xOffsetGPS = -6; // In inches
 double yOffsetGPS = 5; // In inches
@@ -27,11 +28,32 @@ double yOffsetGPS = 5; // In inches
 
 // ---------------------------Responsive Functions---------------------------------
 
-// Function that checks controller inputs and responds
+// Check controller inputs and respond
+// Tank drive with triggers controlling clamp and intake
 void checkInputs(){
-  leftDrive.setVelocity(Controller1.Axis3.value(),pct);
-  rightDrive.setVelocity(Controller1.Axis2.value(),pct);
 
+  // Set the drivetrain motor groups to move based on tank drive principles
+  leftDrive.setVelocity(Controller1.Axis3.value(), pct);
+  rightDrive.setVelocity(Controller1.Axis2.value(), pct);
+
+  // Intake control
+  if (Controller1.ButtonR1.pressing()) {
+    intakeLower.spin(fwd,100,pct);
+    intakeUpper.spin(fwd,70,pct);
+  } else if (Controller1.ButtonR2.pressing()) {
+    intakeLower.spin(reverse,30,pct);
+    intakeUpper.spin(reverse,30,pct);
+  } else {
+    intakeLower.stop(coast);
+    intakeUpper.stop(coast);
+  }
+
+  // Clamp control
+  if (Controller1.ButtonL2.pressing()) {
+    clampPneumatic.set(true);
+  } else if (Controller1.ButtonL1.pressing()) {
+    clampPneumatic.set(false);
+  }
 }
 
 
@@ -299,12 +321,12 @@ void aimTo(double desiredAngle, double aimTime, double defaultMovementPercent = 
 //------------------------Autonomous Functions----------------------------
 
 // Autonomous function ran at the start of a competition match when the robot is on the far field side.
-void farGameAuton(){
+void redGameAuton(){
   // The season hasn't started yet!
 }
 
 // Autonomous function ran at the start of a competition match when the robot is on the close field side
-void closeGameAuton(){
+void blueGameAuton(){
   // Same as in farGameAuton!
 }
 
@@ -354,37 +376,39 @@ void pre_auton(void) {
     Controller1.Screen.print("Inertial Calibrated!"); //Print a nice message for the driver
   }
   */
-  // Set drivetrain motors to coast here?
+  // Set drivetrain motors to coast, based on Zach's driver prefrence
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
 
-  // Initializing Robot Configuration. DO NOT REMOVE!
+  // Initialize Robot Configuration
   vexcodeInit();
 }
 
 //Function run during the autonomous period
 void autonomous(void) {
-  
+  /*
   //If statement switch uses the variable at the top of the program to determine what auton to run.
   if (skillsMode == true){
     autonSkillsAuton(); //Calls the Autonomous Skills auton
-  } else if (farSide == true){
+  } else if (redSide == true){
     farGameAuton(); //Call the far side auton
   } else {
     closeGameAuton(); //Call the close side auton
   }
+  */
 }
 
 //Code run during the driver control period
 void usercontrol(void) {
   
+  // Start the drivetrain (this doesn't necessarily mean it will move)
   leftDrive.spin(fwd);
   rightDrive.spin(fwd);
 
-  //Main loop for driver control code
+  // Main loop for driver control code
   while (true == true /*a statement that is true*/) { 
 
-    checkInputs(); //Calls checkInputs, which checks buttons and joysticks on the controller and responds accordingly
+    checkInputs(); // Call checkInputs, which checks buttons and joysticks on the controller and responds accordingly
     wait(20, msec); // Sleep the program for a short amount of time to prevent wasted resources
   }
 }
@@ -399,6 +423,7 @@ int main() {
   pre_auton();
 
   // Prevent main from exiting with an infinite loop
+  // We wouldn't want this program ending early, right? ...right?
   while (true) {
     wait(100, msec);
   }

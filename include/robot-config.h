@@ -34,6 +34,13 @@ extern motor rightFront;
 extern motor rightTop;
 extern motor_group rightDrive;
 
+// Intake motors
+extern motor intakeUpper;
+extern motor intakeLower;
+
+// Pneumatics
+extern digital_out clampPneumatic;
+
 // Other Sensors
 extern gps GPS;
 extern inertial Inertial;

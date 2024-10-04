@@ -1,9 +1,10 @@
 #include "vex.h"
-#include "Functions/swerveControl.cpp" // Drivetrain control
+//#include "func/swerveControl.cpp" // Drivetrain control
+
 
 using namespace vex;
-using signature = vision::signature;
-using code = vision::code;
+//using signature = vision::signature;
+//using code = vision::code;
 
 // Here, have a brain!
 brain Brain;
@@ -32,16 +33,23 @@ rotation bL = rotation(PORT12);
 SwerveDrivetrain Drivetrain(swerveFrontLeft1,swerveFrontLeft2,swerveFrontRight1,swerveFrontRight2,swerveBackRight1,swerveBackRight2,swerveBackLeft1,swerveBackLeft2,fL,fR,bR,bL);
 */
 
-// Drivtrain motors
-motor leftBack = motor(PORT13, ratio6_1, true);
-motor leftFront = motor(PORT12, ratio6_1, true);
-motor leftTop = motor(PORT11, ratio6_1);
+// Drivetrain motors
+motor leftBack = motor(PORT9, ratio6_1, true);
+motor leftFront = motor(PORT10, ratio6_1, true);
+motor leftTop = motor(PORT7, ratio6_1);
 motor_group leftDrive = motor_group(leftBack, leftFront, leftTop);
 
-motor rightBack = motor(PORT18, ratio6_1);
-motor rightFront = motor(PORT19, ratio6_1);
-motor rightTop = motor(PORT20, ratio6_1, true);
+motor rightBack = motor(PORT12, ratio6_1);
+motor rightFront = motor(PORT11, ratio6_1);
+motor rightTop = motor(PORT13, ratio6_1, true);
 motor_group rightDrive = motor_group(rightBack, rightFront, rightTop);
+
+// Intake motors
+motor intakeUpper = motor(PORT20, ratio18_1);
+motor intakeLower = motor(PORT19, ratio18_1); // 5.5W
+
+// Pneumatics
+digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.A);
 
 // Other Sensors
 gps GPS = gps(PORT1);
@@ -49,5 +57,5 @@ inertial Inertial = inertial(PORT2);
 
 
 void vexcodeInit( void ) {
-  // nothing to initialize because we are soooooo boring around here and i have been coding for like 13 hours and why am i still here just to suffer and this comment will probably get deleted anyways so there is no reason for me to not randomly start ranting about code
+  // sí
 }
