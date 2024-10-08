@@ -8,7 +8,6 @@ class PID {
     double Kd; // Derivative Tuning
     double integral = 0; // Current integral value
     double derivative; // Current derivative value
-    int t; // The current time
     int dT; // The change in time, in ms, of every tick
     double oldError = 0; // The previous error, used for calculating Integral
   public:
@@ -49,7 +48,14 @@ class PID {
       return (Kp * error) + (Ki * integral) + (Kd * derivative);
     }
 
-    // Runs a specific instance of the PID
+    void reset(){
+
+      // Reset variables
+      integral = 0;
+
+    }
+
+    // Runs a general instance of the PID
     bool run(double setpoint, double precision = 1, double secondsAllowed = 2, int recursions = 5){
       
       // vars
@@ -59,7 +65,7 @@ class PID {
       for (int i = 0; i < recursions; i++){
 
         // Loop of ticks, converting seconds allowed into sets of dT ms
-        for (t = 0; t < (secondsAllowed * 1000 / dT); t++){
+        for (int t = 0; t < (secondsAllowed * 1000 / dT); t++){
           
           current = 0; // you know
           update(setpoint, current);

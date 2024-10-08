@@ -14,20 +14,20 @@ competition Competition;
 // *******************************Global Vars*************************************
 // *******************************************************************************
 
-bool skillsMode = false; // A toggle for whether to run this as the game program or skills program. This is to make it easy to switch between them when uploading code.
+bool skillsMode = false; // A toggle for whether to run the game auton or skills auton
 bool gpsAllowed = false; // A toggle for whether the field has GPS strips or not
 bool redSide = false; // A toggle to tell where the robot is starting on the field
 
-double xOffsetGPS = -6; // In inches
-double yOffsetGPS = 5; // In inches
-
+double xOffsetGPS = 5.25; // In inches
+double yOffsetGPS = -4.5; // In inches
+double angleOffsetGPS = 90; // In degrees
+PID headingPID = PID(0.7, 0, 0, 10);
 
 // *******************************************************************************
 // ********************************Functions**************************************
 // *******************************************************************************
 
 // ---------------------------Responsive Functions---------------------------------
-
 
 // Check controller inputs and respond
 // Tank drive with triggers controlling clamp and intake
@@ -44,6 +44,9 @@ void checkInputs(){
   } else if (Controller1.ButtonR2.pressing()) {
     intakeLower.spin(reverse,30,pct);
     intakeUpper.spin(reverse,30,pct);
+  } else if (Controller1.ButtonB.pressing()) {
+    intakeLower.spin(fwd,100,pct);
+    intakeUpper.spin(fwd,50,pct);
   } else {
     intakeLower.stop(coast);
     intakeUpper.stop(coast);
@@ -92,29 +95,29 @@ void turn(char dir, float degrees, int velocityPercent = 20){
   }
 }
 
-//Inertial sensor calibration function using GPS. This ends up being more precise than setting the robot up the same direction every time.
+// Inertial sensor calibration function using GPS. This ends up being more precise than setting the robot up the same direction every time.
 void inertialGPSCalibrate(double averageSeconds = 1){
 
-  //For the robot to not average the turn at all, set seconds to 0.
+  // For the robot to not average the turn at all, set seconds to 0.
 
-  //Setup variables
-  double averagedHeading = 0; //The final averaged heading
-  int i; //A counter for the for loop. This must be defined outside of it for the final for loop.
+  // Setup variables
+  double averagedHeading = 0; // The final averaged heading
+  int i; // A counter for the for loop. This must be defined outside of it for the final for loop.
 
-  //For loop adds up all the different angles of the GPS. Step one of averaging the robot angle.
+  // For loop adds up all the different angles of the GPS. Step one of averaging the robot angle.
   for(i = 0; i < (averageSeconds * 25) + 1; i++){
 
-    //Add the GPS heading to the total
+    // Add the GPS heading to the total
     averagedHeading += GPS.heading();
 
-    //Wait a short period because the GPS only updates a certain amount of times a second
+    // Wait a short period because the GPS only updates a certain amount of times a second
     wait(40,msec);
   }
 
-  //Divide averagedHeading by the amount of GPS headings added to it
+  // Divide averagedHeading by the amount of GPS headings added to it
   averagedHeading /= i;
 
-  //Log the averaged heading versus the GPS heading
+  // Log the averaged heading versus the GPS heading
   Controller1.Screen.clearScreen(); //Clear any previous text
   Controller1.Screen.setCursor(1, 1); //Set the cursor to the start of the first row
   Controller1.Screen.print("Average: "); //Print a label for the averaged heading
@@ -123,24 +126,28 @@ void inertialGPSCalibrate(double averageSeconds = 1){
   Controller1.Screen.print("GPS: "); //Print a label for the GPS heading
   Controller1.Screen.print(GPS.heading()); //Print the GPS heading
 
-  //Set the inertial sensor's heading to the GPS heading.
+  Controller1.Screen.setCursor(3, 1);
+  Controller1.Screen.print("Calibrating...");
+
+  // Set the inertial sensor's heading to the GPS heading.
   Inertial.setHeading(averagedHeading, deg);
 
-  //Loop until the inertial sensor finishes setting the heading
+  // Loop until the inertial sensor finishes setting the heading
   while(Inertial.isCalibrating()){
 
     //Wait to prevent wasted resources by iterating too fast
     wait(100,msec);
   }
 
-  //Let the user know that calibration is complete
-  Controller1.Screen.setCursor(3, 1); //Set the cursor to the next available row
-  Controller1.Screen.print("Inertial Calibrated!"); //Print a nice message for the driver
+  // Let the user know that calibration is complete
+  Controller1.Screen.clearLine(3);
+  Controller1.Screen.setCursor(3, 1);
+  Controller1.Screen.print("Inertial Calibrated!");
 
 }
 
 //PI Conrolled turn function using inertial sensor
-void turnTo(double desiredAngle, double precision = 0.3, double secondsAllowed = 2, int recursions = 5){
+void turnedTo(double desiredAngle, double precision = 0.3, double secondsAllowed = 2, int recursions = 5){
   
   /*  
     Explanation of input variables:
@@ -318,6 +325,61 @@ void aimTo(double desiredAngle, double aimTime, double defaultMovementPercent = 
 
 }
 
+void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
+
+  headingPID.reset();
+
+  // vars
+  double currentAngle;
+
+  // Loop of recursions
+  for (int i = 0; i < recursions; i++){
+
+    // Loop of ticks, converting seconds allowed into sets of 10 ms
+    for (int t = 0; t < (secondsAllowed * 100); t++){
+      
+      // Update vars
+      currentAngle = Inertial.heading(deg);
+      double change = headingPID.update(desiredAngle, currentAngle);
+
+      // Spin drivetrain
+      leftDrive.spin(fwd,change,pct);
+      rightDrive.spin(reverse,change,pct);
+
+      //Check for completion of the tick loop
+      if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
+            
+        //Break the tick loop
+        break;
+      }
+
+      //Prevent wasted resources by waiting a short period of time before iterating
+      wait(10,msec); 
+    }
+
+    leftDrive.stop(brake);
+    rightDrive.stop(brake);
+
+    //Wait a little bit in case the system is still in motion
+    wait(200,msec);
+
+    //Update currentAngle
+    currentAngle = Inertial.heading(deg);
+
+    //Check if desired angle was achieved
+    if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
+
+      leftDrive.stop(coast);
+      rightDrive.stop(coast);
+
+      //Break the recursion loop and the whole turnTo, because it has reached the desired angle
+      break;
+    }  
+
+    //If the correct angle was not achieved, the code will recurse
+  }
+}
+
 
 //------------------------Autonomous Functions----------------------------
 
@@ -339,44 +401,45 @@ void autonSkillsAuton(){
 
 //---------------------------Game/Match Functions-----------------------------
 
-//Setup code ran before the competition starts
+// Setup code ran before the competition starts
 void pre_auton(void) {
-  /*
-  //Check if using the GPS is allowed
+  
+  // Check if using the GPS is allowed
   if(gpsAllowed == true){
 
-    //Wait a short period to allow the GPS to register field strips
+    // Wait a short period to allow the GPS to register field strips
     wait(200,msec);
 
-    //Force a GPS update before the code that needs it beings
+    // Force a GPS update before the code that needs it beings
     Brain.Screen.print(GPS.heading()); 
     
-    //Wait a short period to allow the GPS to update
+    // Wait a short period to allow the GPS to update
     wait(200,msec);
 
-    //Set the GPS origin
+    // Set the GPS origin
     GPS.setOrigin(xOffsetGPS, yOffsetGPS, inches);
 
-    //Calibrate the inertial sensor with the custom calibration function with a 0.5 second averaging time
+    // Calibrate the inertial sensor with the custom calibration function with a 0.5 second averaging time
     inertialGPSCalibrate(0.5);
   
   } else {
 
-    //If the robot doesn't have access to GPS strips, assume that it was set up with the GPS sensor facing 180 degrees.
-    Inertial.setHeading(180, deg);
+    // If the robot doesn't have access to GPS strips, assume that it was set up facing 0 degrees
+    Inertial.setHeading(0, deg);
 
-    //Loop until the inertial sensor finishes calibrating.
+    // Loop until the inertial sensor finishes calibrating.
     while(Inertial.isCalibrating()){
 
-      //Wait to prevent wasted resources by iterating too fast
+      // Wait to prevent wasted resources by iterating too fast
       wait(100,msec);
+
     }
 
-    //Let the driver know that calibration is complete
+    // Let the driver know that calibration is complete
     Controller1.Screen.setCursor(3, 1); //Set the cursor to the next available row
     Controller1.Screen.print("Inertial Calibrated!"); //Print a nice message for the driver
   }
-  */
+  
   // Set drivetrain motors to coast, based on Zach's driver prefrence
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
@@ -390,15 +453,15 @@ void pre_auton(void) {
 
 //Function run during the autonomous period
 void autonomous(void) {
-
-  // Drive backwards up to the goal
-  leftDrive.spinFor(reverse, 2300, deg, 70, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 2300, deg, 70, velocityUnits::pct);
   
+  // Drive backwards up to the goal
+  leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
+  /*
   // Continue driving backwards
   leftDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct);
-
+  */
   // Stop the drivetrain not too hard
   leftDrive.stop(coast);
   rightDrive.stop(coast);
@@ -408,18 +471,18 @@ void autonomous(void) {
 
   // Wait a little bit
   wait(400, msec);
-
+  /*
   // Drive backwards to safety
   leftDrive.spinFor(fwd, 500, deg, 10, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 500, deg, 10, velocityUnits::pct);
-
+  */
   // Score?!!!!
   intakeUpper.spinFor(3,sec, 70, velocityUnits::pct);
 }
 
 //Code run during the driver control period
 void usercontrol(void) {
-  
+
   // Start the drivetrain (this doesn't necessarily mean it will move)
   leftDrive.spin(fwd);
   rightDrive.spin(fwd);

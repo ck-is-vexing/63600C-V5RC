@@ -53,7 +53,7 @@ digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.A);
 
 // Other Sensors
 gps GPS = gps(PORT1);
-inertial Inertial = inertial(PORT2);
+inertial Inertial = inertial(PORT6);
 
 
 void vexcodeInit( void ) {
