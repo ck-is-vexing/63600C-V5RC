@@ -1,6 +1,12 @@
-// *******************************************************************************
-// **********************************Setup****************************************
-// *******************************************************************************
+/*
+To-do:
+ - Make the GPS position relative to the robot, not the GPS sensor
+ - drive function needs work
+
+*/
+
+
+// -------- SETUP --------
 
 #include "vex.h" // Include the vex header
 #include "func/PID.cpp" // Include the PID class
@@ -10,24 +16,228 @@ using namespace vex; // Set the namespace to vex
 competition Competition;
 
 
-// *******************************************************************************
-// *******************************Global Vars*************************************
-// *******************************************************************************
+// -------- GLOBAL VARIABLES --------
 
 bool skillsMode = false; // A toggle for whether to run the game auton or skills auton
-bool gpsAllowed = false; // A toggle for whether the field has GPS strips or not
+bool gpsAllowed = true; // A toggle for whether the field has GPS strips or not
 bool redSide = false; // A toggle to tell where the robot is starting on the field
 
+double startX = 48; // In inches
+double startY = 5 * 24; // In inches
 double xOffsetGPS = 5.25; // In inches
 double yOffsetGPS = -4.5; // In inches
-double angleOffsetGPS = 90; // In degrees
+double angleOffsetGPS = 180; // In degrees
+
 PID headingPID = PID(0.7, 0, 0, 10);
+PID drivePID = PID(1,0,0,40); // 40 bc of gps update rate
 
-// *******************************************************************************
-// ********************************Functions**************************************
-// *******************************************************************************
+// -------- SUPPORT FUNCTIONS --------
 
-// ---------------------------Responsive Functions---------------------------------
+// Returns the x position of the robot in feet
+double get_x(){
+  return (GPS.xPosition(distanceUnits::in) + xOffsetGPS)/ 12;
+}
+
+// Returns the y position of the robot in feet
+double get_y(){
+  return (GPS.yPosition(distanceUnits::in) + yOffsetGPS)/ 12;
+}
+
+// Renders an approximation of the robot position on the Brain screen
+void renderRobot(){
+
+  // VEX Brain is 480x240p
+  // 20p = 1 foot
+  Brain.Screen.clearScreen();
+  Brain.Screen.setPenColor(white);
+  Brain.Screen.setPenWidth(2);
+
+  // Draw field
+  for(int x = 0; x <= 6; x++){
+    Brain.Screen.drawLine(x * 40, 0, x * 40, 240);
+  }
+
+  for(int y = 0; y <= 6; y++){
+    Brain.Screen.drawLine(0, y * 40, 240, y * 40);
+  }
+
+  // Draw robot vector
+  double angle = Inertial.heading(deg);
+  double x = get_x() * 20; // Multiplied by 20 to convert feet to pixels
+  double x2 = x + cos(angle / 40) * 40; // 40 is the desired length of the render of the vector
+  double y = get_y() * -20 + 240; // Inverted because the Brain screen origin is the upper left, but we want the lower left
+  double y2 = y + sin(angle / 40) * 40;
+
+  Brain.Screen.setPenColor(red);
+  Brain.Screen.setFillColor(red);
+  Brain.Screen.setPenWidth(6);
+  Brain.Screen.drawCircle(x, y, 8);
+  Brain.Screen.drawLine(x, y, x2, y2);
+
+  Brain.Screen.setCursor(4, 30);
+  Brain.Screen.setPenColor(white);
+  Brain.Screen.setFillColor(black);
+  Brain.Screen.setPenWidth(1);
+  Brain.Screen.print(angle);
+}
+// PID enabled turn function
+// desiredAngle is the setpoint
+void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
+
+  // Reset the PID
+  headingPID.reset();
+
+  // vars
+  double currentAngle;
+
+  // Loop of recursions
+  for (int i = 0; i < recursions; i++){
+
+    // Loop of ticks, converting seconds allowed into sets of 10 ms
+    for (int t = 0; t < (secondsAllowed * 100); t++){
+      
+      /*
+      //Find the shortest possible route to reach target angle
+      if (error > 180){
+        error -= 360;
+      } else if (error < -180){
+        error += 360;
+      }
+      */
+
+      // Update vars
+      currentAngle = Inertial.heading(deg);
+      double change = headingPID.update(desiredAngle, currentAngle);
+
+      // Spin drivetrain
+      leftDrive.spin(fwd,change,pct);
+      rightDrive.spin(reverse,change,pct);
+
+      // Check for completion of the tick loop
+      if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
+
+        // Break the tick loop
+        break;
+      }
+
+      // Prevent wasted resources by waiting a short period of time before iterating
+      wait(10,msec); 
+    }
+
+    leftDrive.stop(brake);
+    rightDrive.stop(brake);
+
+    // Wait a little bit in case the system is still in motion
+    wait(200,msec);
+
+    // Update currentAngle
+    currentAngle = Inertial.heading(deg);
+
+    // Check if desired angle was achieved
+    if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
+      
+      // Update controller screen to tell user the robot has finished the turn, along with debug information
+      Controller1.Screen.clearScreen();
+      Controller1.Screen.setCursor(1, 1);
+      Controller1.Screen.print("Turn Complete!");
+      Controller1.Screen.setCursor(2, 1);
+      Controller1.Screen.print("Angle: ");
+      Controller1.Screen.print(currentAngle);
+
+      // Stop drivetrain
+      leftDrive.stop(coast);
+      rightDrive.stop(coast);
+
+      // Break the recursion loop and the whole turnTo, because it has reached the setpoint
+      break;
+    }  
+
+    // If the correct angle was not achieved, the code will recurse
+  }
+}
+
+// PID enabled drive function
+// desiredX and desiredY are coordinates on the VEX Field, with (0,0) being the red negative corner, and the unit being feet.
+void drive(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
+
+  // Calculate the angle
+  // pv = sqrt((y2 - y1)^2 + (x2 - x1)^2)
+  // theta = atan((y2 - y1) / (x2 - x1))
+  // Turn to face the desired point
+  turnTo(atan(3));
+
+  headingPID.reset();
+  drivePID.reset();
+
+  // vars
+  double currentAngle;
+  double currentDistance;
+
+  // Loop of recursions
+  for (int i = 0; i < recursions; i++){
+
+    // Loop of ticks, converting seconds allowed into sets of 10 ms
+    for (int t = 0; t < (secondsAllowed * 100); t++){
+      
+      /*
+      //Find the shortest possible route to reach target angle
+      if (error > 180){
+        error -= 360;
+      } else if (error < -180){
+        error += 360;
+      }
+      */
+
+      // Update vars
+      currentAngle = Inertial.heading(deg);
+      double change = headingPID.update(desiredX, currentAngle);
+
+      // Spin drivetrain
+      leftDrive.spin(fwd,change,pct);
+      rightDrive.spin(reverse,change,pct);
+
+      // Check for completion of the tick loop
+      if (currentAngle < (desiredX + precision) && currentAngle > (desiredX - precision)){
+
+        // Break the tick loop
+        break;
+      }
+
+      // Prevent wasted resources by waiting a short period of time before iterating
+      wait(10,msec); 
+    }
+
+    leftDrive.stop(brake);
+    rightDrive.stop(brake);
+
+    // Wait a little bit in case the system is still in motion
+    wait(200,msec);
+
+    // Update currentAngle
+    currentAngle = Inertial.heading(deg);
+
+    // Check if desired angle was achieved
+    if (currentAngle < (desiredX + precision) && currentAngle > (desiredX - precision)){
+      
+      // Update controller screen to tell user the robot has finished the turn, along with debug information
+      Controller1.Screen.clearScreen();
+      Controller1.Screen.setCursor(1, 1);
+      Controller1.Screen.print("Turn Complete!");
+      Controller1.Screen.setCursor(2, 1);
+      Controller1.Screen.print("Angle: ");
+      Controller1.Screen.print(currentAngle);
+
+      // Stop drivetrain
+      leftDrive.stop(coast);
+      rightDrive.stop(coast);
+
+      // Break the recursion loop and the whole turnTo, because it has reached the setpoint
+      break;
+    }  
+
+    // If the correct angle was not achieved, the code will recurse
+  }
+}
 
 // Check controller inputs and respond
 // Tank drive with triggers controlling clamp and intake
@@ -60,41 +270,6 @@ void checkInputs(){
   }
 }
 
-
-//------------------------Autonomous Support Functions----------------------------
-
-//Function to drive forwards or backwards. This is required because motor groups have to be used instead of a drivetrain in the code due to the 6 motor drivetrain.
-void drive(char dir, float inches, int velocityPercent = 20){
-
-  //Conversion from inches to degrees of rotation for the motor.
-  double motorDegrees = inches / (1/*insert correct number here*/); //(Circumphrence of the wheels) / (The gear ratio of the robot) / (360, to put the number into degrees). The number was shortened to save processing power.
-
-  if (dir == 'f'){ //Run code in the curly brackets if the user specified 'f', or forwards.
-    // ~~insert drive code here?
-  } else if (dir == 'b' || dir == 'r'){ //This could be replaced with just an else statement as these are the only 3 options. It hasn't because then there couldn't be an error response.
-    // ~~insert drive code here?
-  } else {
-    // do nothing and cry because whoever tried to call this function messed up
-  }
-}
-
-//Function to turn the robot clockwise or counterclockwise. This is required because motor groups have to be used instead of a drivetrain in the code due to the 6 motor drivetrain.
-void turn(char dir, float degrees, int velocityPercent = 20){ 
-
-  //"https://www.desmos.com/calculator/ovrk4bnpat" for an interactive and easier to follow version of this math.
-  double robotTurnRadius = 4.816; //The distance between the centers of two opposite robot wheels divided by 2. Essentially the radius of the circle that the robot turns around.
-  double robotArc = robotTurnRadius * (degrees * 3.1415 / 180); //The length of the arc along the turning radius that the robot is intended to follow.
-  double motorDegrees = robotArc / (3.25 * 3.1415) * 600; //This equates the final amount of degrees that the motor groups must rotate. It is calculated with the arc length variable divided by the circumphrence of the robot wheels. Then it is multiplied by 600, a number that both converts to degrees and accounts for the gear ratio.
-
-  if (dir == 'l'){ //If the robot is turning left, run the below code
-    // .
-  } else if (dir == 'r'){ //If the robot is turning right, run the below code.
-    // ..
-  } else { // this *should* never be called
-    // ...
-  }
-}
-
 // Inertial sensor calibration function using GPS. This ends up being more precise than setting the robot up the same direction every time.
 void inertialGPSCalibrate(double averageSeconds = 1){
 
@@ -102,7 +277,7 @@ void inertialGPSCalibrate(double averageSeconds = 1){
 
   // Setup variables
   double averagedHeading = 0; // The final averaged heading
-  int i; // A counter for the for loop. This must be defined outside of it for the final for loop.
+  int i; // A counter for the for loop. This must be defined outside of it for the final division.
 
   // For loop adds up all the different angles of the GPS. Step one of averaging the robot angle.
   for(i = 0; i < (averageSeconds * 25) + 1; i++){
@@ -118,14 +293,15 @@ void inertialGPSCalibrate(double averageSeconds = 1){
   averagedHeading /= i;
 
   // Log the averaged heading versus the GPS heading
-  Controller1.Screen.clearScreen(); //Clear any previous text
-  Controller1.Screen.setCursor(1, 1); //Set the cursor to the start of the first row
-  Controller1.Screen.print("Average: "); //Print a label for the averaged heading
-  Controller1.Screen.print(averagedHeading); //Print the averaged heading
-  Controller1.Screen.setCursor(2, 1); //Set the cursor down a row
-  Controller1.Screen.print("GPS: "); //Print a label for the GPS heading
-  Controller1.Screen.print(GPS.heading()); //Print the GPS heading
+  Controller1.Screen.clearScreen();
+  Controller1.Screen.setCursor(1, 1);
+  Controller1.Screen.print("Average: ");
+  Controller1.Screen.print(averagedHeading);
+  Controller1.Screen.setCursor(2, 1);
+  Controller1.Screen.print("GPS: ");
+  Controller1.Screen.print(GPS.heading());
 
+  // Let the user know that the inertial sensor is now calibrating
   Controller1.Screen.setCursor(3, 1);
   Controller1.Screen.print("Calibrating...");
 
@@ -143,245 +319,10 @@ void inertialGPSCalibrate(double averageSeconds = 1){
   Controller1.Screen.clearLine(3);
   Controller1.Screen.setCursor(3, 1);
   Controller1.Screen.print("Inertial Calibrated!");
-
-}
-
-//PI Conrolled turn function using inertial sensor
-void turnedTo(double desiredAngle, double precision = 0.3, double secondsAllowed = 2, int recursions = 5){
-  
-  /*  
-    Explanation of input variables:
-
-    desiredAngle: The angle that the programmer desires the robot to turn to.
-    precision: How close the robot must be to the desired angle for it to quit the turn.
-    secondsAllowed: A cap for how long the turn code is allowed to repeat for each recurson. This is useful to make the robot never get stuck in an infinite loop of incorrectness
-    recursions: The amount of seperate times the robot should be allowed to pass desiredAngle and continue to turn towards it.
-  */
-
-  //Variables
-  double robotAngle = 0; //The current angle of the robot, as a variable
-  double error = 0; //How far the robot is from the intended angle, calculated with the difference of desiredAngle and robotAngle.
-  double motorVelocity = 0; //The velocity the drivetrain motors are set to
-  double integral = 0; //The integral parameter
-
-  //Force the desired angle to be within 360 degrees by using mod
-  desiredAngle = fmod(desiredAngle,360); 
-
-  //Loop of recursions
-  for (int i = 0; i < recursions; i++){
-
-    //Loop of ticks, converting seconds allowed into sets of 10 ms
-    for (int t = 0; t < (secondsAllowed * 100); t++){
-      
-      //Update robotAngle
-      robotAngle = Inertial.heading();
-
-      //How far the robot is from the intended angle, calculated with the difference of desiredAngle and robotAngle.
-      error = desiredAngle - robotAngle; 
-
-      //Find the shortest possible route to reach target angle
-      if (error > 180){
-        error -= 360;
-      } else if (error < -180){
-        error += 360;
-      }
-      
-      //Update Integral
-      integral += (error * t / 1000); //Integral = Integral + (current error) * (tick number, one every 10 milliseconds) / (1000, to convert to seconds)
-
-      //Calculating the final velocity for motors
-      motorVelocity = (0.45 * error) + (0.05 * integral); //The first set of parenthesis contains Proportional control; the second Integral control. Each is multiplied by a tuning variable.
-
-      //Set the motor groups to spin at the speed of motorVelocity
-      // ...
-
-      //Check for completion of the loop of ticks
-      if ((robotAngle < (desiredAngle + precision) && robotAngle > (desiredAngle - precision)) ||
-        (robotAngle < (desiredAngle + precision - 360) && robotAngle > (desiredAngle - precision - 360)) || //Check for completion at a near 0 or 360 degree angle
-        (robotAngle < (desiredAngle + precision + 360) && robotAngle > (desiredAngle - precision + 360)) ){ //Same as above
-        
-        //Break the tick loop
-        break;
-      }
-
-      //Prevent wasted resources by waiting a short period of time before iterating
-      wait(10,msec); 
-    }
-
-    //Stop motors
-    // ...
-
-    //Reset integral
-    integral = 0;
-
-    //Wait a little bit in case the robot is still in motion
-    wait(200,msec);
-
-    //Update robotAngle
-    robotAngle = Inertial.heading();
-
-    //Check if desired angle was achieved
-    if ((robotAngle < (desiredAngle + precision) && robotAngle > (desiredAngle - precision)) ||
-      (robotAngle < (desiredAngle + precision - 360) && robotAngle > (desiredAngle - precision - 360)) || //Check for completion at a near 0 or 360 degree angle
-      (robotAngle < (desiredAngle + precision + 360) && robotAngle > (desiredAngle - precision + 360)) ){ //Same as above
-
-      //Update controller screen to tell user the robot has finished the turn.
-      Controller1.Screen.clearScreen(); //Clear the scren
-      Controller1.Screen.setCursor(1, 1); //Set the cursor to the first line of the controller
-      Controller1.Screen.print("Turn Complete!"); //Print a nice message
-      Controller1.Screen.setCursor(2, 1); //Set the cursor to the second line
-      Controller1.Screen.print("Angle: "); //Print a label for robotAngle
-      Controller1.Screen.print(robotAngle); //Print robotAngle to show if the code encountered a bug
-
-      //Set the motors to stop on coast
-      // ...
-
-      //Break the recursion loop and the whole turnTo, because it has reached the desired angle
-      break;
-    }  
-
-    //If the correct angle was not achieved, the code will recurse
-  }
-}
-
-//PI Controlled aim function using inertial sensor
-void aimTo(double desiredAngle, double aimTime, double defaultMovementPercent = 0, double integralResetPrecision = 0.1, int maxIntegralUpdates = 500){
-
-  /*  
-    Explanation of input variables:
-
-    desiredAngle: The heading that the robot should aim towards
-    aimTime: The amount of time in seconds that the robot should aim towards desiredAngle
-    defaultMovementPercent: A motor percentage that the robot should automatically move forwards or back. This is needed because the catapult this season slowly brings the robot forwards, away from the match load bar.
-    integralResetPrecision: How close the robot needs to be to the desired angle to reset the integral. Without resetting the integral, the controller would mess up since it needs to aim for a certain amount of time.
-    maxIntegralUpdates: The maximum amount of time the integral can go without being reset. Divide this number by 100 to get it in seconds.
-  */
-
-  //Aim setup
-  double robotAngle = 0; //The current angle of the robot, as a variable
-  double error = 0; //How far the robot is from the intended angle
-  double motorVelocity = 0; //The velocity the drivetrain motors are set to
-  double integral = 0; //The integral parameter
-  double timeCount = 0; //A counter for time
-
-  //Force the desired angle to be within 360 degrees by using mod
-  desiredAngle = fmod(desiredAngle,360); 
-
-  //Timed loop
-  while(timeCount < aimTime){ //While the variable counting time is less than the amount of time the robot should aim for, repeat.
-
-    //Main PID loop
-    for (int t = 0; t < maxIntegralUpdates; t++){ //Repeat until t becomes greater than maxIntegralUpdates.
-
-      //=========================Aim towards the correct angle=========================
-      
-      //Update robotAngle
-      robotAngle = Inertial.heading();
-
-      //How far the robot is from the intended angle, calculated with the difference of desiredAngle and robotAngle.
-      error = desiredAngle - robotAngle; 
-
-      //Find the shortest possible route to reach the target angle
-      if (error > 180){
-        error -= 360;
-      } else if (error < -180){
-        error += 360;
-      }
-      
-      //Update Integral
-      integral += (error * t / 1000); //Integral = Integral + (current error) * (tick number, one every 10 milliseconds) / (1000, to convert to seconds)
-
-      //Calculating the final velocity for motors
-      motorVelocity = (0.8 * error) + (0.03 * integral); //The first set of parenthesis contains the proportional variable; the second contains the integral. Each is multiplied by a tuning number.
-
-      //Set the motor groups to spin at the speed of motorVelocity, combined with the default movement. Default movement is needed to stay in contact with the match load bar.
-      // ...
-      //Add to timeCount in seconds
-      timeCount += 0.01;
-
-      //Prevent wasted resources by waiting a short period of time
-      wait(10,msec); 
-
-      //Check for integral reset
-      if ((robotAngle < (desiredAngle + integralResetPrecision) && robotAngle > (desiredAngle - integralResetPrecision)) ||
-      (robotAngle < (desiredAngle + integralResetPrecision - 360) && robotAngle > (desiredAngle - integralResetPrecision - 360)) || //Check for completion at a near 0 or 360 degree angle
-      (robotAngle < (desiredAngle + integralResetPrecision + 360) && robotAngle > (desiredAngle - integralResetPrecision + 360)) || //Same as above
-      (timeCount < aimTime)){ //Check for completion based on time
-
-        //Break the loop to allow for integral reset or to finish the aimTo.
-        break;
-      }
-    }
-
-    //Stop motors
-    // ...
-
-    //Reset integral
-    integral = 0;
-  }
-
-  //Wait a little bit while the motors brake
-  wait(200,msec);
-
-}
-
-void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
-
-  headingPID.reset();
-
-  // vars
-  double currentAngle;
-
-  // Loop of recursions
-  for (int i = 0; i < recursions; i++){
-
-    // Loop of ticks, converting seconds allowed into sets of 10 ms
-    for (int t = 0; t < (secondsAllowed * 100); t++){
-      
-      // Update vars
-      currentAngle = Inertial.heading(deg);
-      double change = headingPID.update(desiredAngle, currentAngle);
-
-      // Spin drivetrain
-      leftDrive.spin(fwd,change,pct);
-      rightDrive.spin(reverse,change,pct);
-
-      //Check for completion of the tick loop
-      if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
-            
-        //Break the tick loop
-        break;
-      }
-
-      //Prevent wasted resources by waiting a short period of time before iterating
-      wait(10,msec); 
-    }
-
-    leftDrive.stop(brake);
-    rightDrive.stop(brake);
-
-    //Wait a little bit in case the system is still in motion
-    wait(200,msec);
-
-    //Update currentAngle
-    currentAngle = Inertial.heading(deg);
-
-    //Check if desired angle was achieved
-    if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
-
-      leftDrive.stop(coast);
-      rightDrive.stop(coast);
-
-      //Break the recursion loop and the whole turnTo, because it has reached the desired angle
-      break;
-    }  
-
-    //If the correct angle was not achieved, the code will recurse
-  }
 }
 
 
-//------------------------Autonomous Functions----------------------------
+// -------- AUTONOMOUS FUNCTIONS --------
 
 // Autonomous function ran at the start of a competition match when the robot is on the far field side.
 void redGameAuton(){
@@ -398,8 +339,28 @@ void autonSkillsAuton(){
   // Yet another instance of... you guessed it... the season hasn't started yet!
 }
 
+// Test a couple different PID angles
+void PIDTest(){
 
-//---------------------------Game/Match Functions-----------------------------
+  // Wait to make sure that calibration is complete.
+  wait(5,sec);
+
+  // Test different angles
+  turnTo(180);
+  wait(3,sec);
+
+  turnTo(90);
+  wait(3,sec);
+
+  turnTo(135);
+  wait(3,sec);
+
+  turnTo(0);
+  wait(3,sec);
+}
+
+
+// -------- GAME FUNCTIONS --------
 
 // Setup code ran before the competition starts
 void pre_auton(void) {
@@ -417,7 +378,7 @@ void pre_auton(void) {
     wait(200,msec);
 
     // Set the GPS origin
-    GPS.setOrigin(xOffsetGPS, yOffsetGPS, inches);
+    //GPS.setOrigin(xOffsetGPS, yOffsetGPS, inches);
 
     // Calibrate the inertial sensor with the custom calibration function with a 0.5 second averaging time
     inertialGPSCalibrate(0.5);
@@ -451,7 +412,7 @@ void pre_auton(void) {
   vexcodeInit();
 }
 
-//Function run during the autonomous period
+// Function run during the autonomous period
 void autonomous(void) {
   
   // Drive backwards up to the goal
@@ -480,8 +441,10 @@ void autonomous(void) {
   intakeUpper.spinFor(3,sec, 70, velocityUnits::pct);
 }
 
-//Code run during the driver control period
+// Code run during the driver control period
 void usercontrol(void) {
+
+  wait(5,sec);
 
   // Start the drivetrain (this doesn't necessarily mean it will move)
   leftDrive.spin(fwd);
@@ -489,14 +452,15 @@ void usercontrol(void) {
 
   // Main loop for driver control code
   while (true == true /*a statement that is true*/) { 
-
+    renderRobot();
     checkInputs(); // Call checkInputs, which checks buttons and joysticks on the controller and responds accordingly
     wait(20, msec); // Sleep the program for a short amount of time to prevent wasted resources
   }
 }
 
-// Main sets up callbacks and runs the pre auton
+// Main sets up callbacks and runs the pre-auton function
 int main() {
+
   // Set up callbacks for autonomous and driver control periods
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);

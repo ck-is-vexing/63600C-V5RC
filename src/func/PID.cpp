@@ -1,6 +1,6 @@
 #include "vex.h" // Include VEX headers
 
-// This class contains a general PID implementation to be used for more specific applications, such as turnTo
+// Contains a general PID implementation to be used for more specific applications, such as turnTo
 class PID {
   private:
     double Kp; // Proportional Tuning
@@ -23,7 +23,7 @@ class PID {
 
     // Returns the PID value for one tick
     // setpoint is the desired value for the variable to approach
-    // pv is the current value of the variable
+    // pv is the process variable
     double update(double setpoint, double pv){ 
 
       // Update error
@@ -48,66 +48,12 @@ class PID {
       return (Kp * error) + (Ki * integral) + (Kd * derivative);
     }
 
+    // Resets variables
+    // Use when the setpoint changes
     void reset(){
 
       // Reset variables
       integral = 0;
 
-    }
-
-    // Runs a general instance of the PID
-    bool run(double setpoint, double precision = 1, double secondsAllowed = 2, int recursions = 5){
-      
-      // vars
-      double current;
-
-      // Loop of recursions
-      for (int i = 0; i < recursions; i++){
-
-        // Loop of ticks, converting seconds allowed into sets of dT ms
-        for (int t = 0; t < (secondsAllowed * 1000 / dT); t++){
-          
-          current = 0; // you know
-          update(setpoint, current);
-
-          //Spin motors
-          // ...
-
-          //Check for completion of the loop of ticks
-          if (current < (setpoint + precision) && current > (setpoint - precision)){
-            
-            //Break the tick loop
-            break;
-          }
-
-          //Prevent wasted resources by waiting a short period of time before iterating
-          wait(dT,msec); 
-        }
-
-        //Stop motors
-        // ...
-
-        //Reset integral
-        integral = 0;
-
-        //Wait a little bit in case the system is still in motion
-        wait(200,msec);
-
-        //Update currentAngle
-        current = 0;
-
-        //Check if desired angle was achieved
-        if (current < (setpoint + precision) && current > (setpoint - precision)){
-
-          //Set the motors to stop on coast
-          // ...
-
-          //Break the recursion loop and the whole turnTo, because it has reached the desired angle
-          break;
-        }  
-
-        //If the correct angle was not achieved, the code will recurse
-      }
-      return true; // returns true because the process has ended
     }
 };

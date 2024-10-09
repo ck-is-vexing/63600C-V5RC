@@ -1,7 +1,7 @@
 {
 	"project": {
 		"name": "63600CMain",
-		"slot": 1,
+		"slot": 2,
 		"description": "Main program for 63600C High Stakes",
 		"platform": "V5",
 		"creationDate": "Thu, 18 Jul 2024 15:54:58 GMT",
