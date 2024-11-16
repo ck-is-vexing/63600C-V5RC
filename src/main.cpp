@@ -1,8 +1,5 @@
 /*
-To-do:
- - Make the GPS position relative to the robot, not the GPS sensor
- - drive function needs work
-
+PLEASE LOOK INTO THE GPS CALIBRATION LATER THANKS
 */
 
 
@@ -22,25 +19,32 @@ bool skillsMode = false; // A toggle for whether to run the game auton or skills
 bool gpsAllowed = true; // A toggle for whether the field has GPS strips or not
 bool redSide = false; // A toggle to tell where the robot is starting on the field
 
-double startX = 48; // In inches
-double startY = 5 * 24; // In inches
-double xOffsetGPS = 5.25; // In inches
-double yOffsetGPS = -4.5; // In inches
+double xOffsetGPS = 2; // In inches
+double yOffsetGPS = -5.5; // In inches
 double angleOffsetGPS = 180; // In degrees
 
 PID headingPID = PID(0.7, 0, 0, 10);
-PID drivePID = PID(1,0,0,40); // 40 bc of gps update rate
+PID drivePID = PID(1,0,0,40); // 40ms because of gps update rate
+
 
 // -------- SUPPORT FUNCTIONS --------
 
-// Returns the x position of the robot in feet
+// Returns the x position of the robot center in inches
 double get_x(){
-  return (GPS.xPosition(distanceUnits::in) + xOffsetGPS)/ 12;
+
+  double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (Inertial.heading() * M_PI / 180);
+  double deltaX = cos(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);
+
+  return (GPS.xPosition(distanceUnits::in) + deltaX);
 }
 
-// Returns the y position of the robot in feet
+// Returns the y position of the robot center in inches
 double get_y(){
-  return (GPS.yPosition(distanceUnits::in) + yOffsetGPS)/ 12;
+
+  double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (Inertial.heading() * M_PI / 180);
+  double deltaY = sin(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);
+
+  return (GPS.yPosition(distanceUnits::in) + deltaY);
 }
 
 // Renders an approximation of the robot position on the Brain screen
@@ -48,9 +52,13 @@ void renderRobot(){
 
   // VEX Brain is 480x240p
   // 20p = 1 foot
+  // GPS sensor (0,0) is at the center of the field
   Brain.Screen.clearScreen();
   Brain.Screen.setPenColor(white);
   Brain.Screen.setPenWidth(2);
+
+  Brain.Screen.setFillColor(yellow);
+  Brain.Screen.drawCircle(120,120,8);
 
   // Draw field
   for(int x = 0; x <= 6; x++){
@@ -62,24 +70,38 @@ void renderRobot(){
   }
 
   // Draw robot vector
-  double angle = Inertial.heading(deg);
-  double x = get_x() * 20; // Multiplied by 20 to convert feet to pixels
-  double x2 = x + cos(angle / 40) * 40; // 40 is the desired length of the render of the vector
-  double y = get_y() * -20 + 240; // Inverted because the Brain screen origin is the upper left, but we want the lower left
-  double y2 = y + sin(angle / 40) * 40;
+  double angle = Inertial.heading() * M_PI / 180; // Get angle in radians
+  double x = get_x() * 5/3; // Multiplied by 5/3 to convert inches to pixels
+  double x_gps = GPS.xPosition(distanceUnits::in) * 5/3;
+  double x2 = x + cos(angle) * 40; // 40 is the desired length of the render of the vector
+  double y = get_y() * 5/3;
+  double y_gps = GPS.yPosition(distanceUnits::in) * 5/3;
+  double y2 = y + sin(angle) * 40;
+
+  Brain.Screen.setPenColor(blue);
+  Brain.Screen.setFillColor(blue);
+  Brain.Screen.drawCircle(x_gps, y_gps, 8);
 
   Brain.Screen.setPenColor(red);
   Brain.Screen.setFillColor(red);
   Brain.Screen.setPenWidth(6);
-  Brain.Screen.drawCircle(x, y, 8);
-  Brain.Screen.drawLine(x, y, x2, y2);
+  Brain.Screen.drawCircle(x + 120, y + 120, 8);
+  Brain.Screen.drawLine(x + 120, y + 120, x2 + 120, y2 + 120);
 
   Brain.Screen.setCursor(4, 30);
   Brain.Screen.setPenColor(white);
   Brain.Screen.setFillColor(black);
   Brain.Screen.setPenWidth(1);
+  Brain.Screen.print("Angle: ");
   Brain.Screen.print(angle);
+  Brain.Screen.setCursor(5, 30);
+  Brain.Screen.print("X: ");
+  Brain.Screen.print(x_gps);
+  Brain.Screen.setCursor(6, 30);
+  Brain.Screen.print("Y: ");
+  Brain.Screen.print(y_gps);
 }
+
 // PID enabled turn function
 // desiredAngle is the setpoint
 void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
@@ -106,7 +128,7 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
       */
 
       // Update vars
-      currentAngle = Inertial.heading(deg);
+      currentAngle = Inertial.heading();
       double change = headingPID.update(desiredAngle, currentAngle);
 
       // Spin drivetrain
@@ -131,7 +153,7 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
     wait(200,msec);
 
     // Update currentAngle
-    currentAngle = Inertial.heading(deg);
+    currentAngle = Inertial.heading();
 
     // Check if desired angle was achieved
     if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
@@ -157,7 +179,8 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
 }
 
 // PID enabled drive function
-// desiredX and desiredY are coordinates on the VEX Field, with (0,0) being the red negative corner, and the unit being feet.
+// desiredX and desiredY are coordinates on the VEX Field, with (0,0) being the red negative corner, and the unit being inches.
+// Does not work right now
 void drive(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
 
   // Calculate the angle
@@ -189,7 +212,7 @@ void drive(double desiredX, double desiredY, double precision = 0.5, double seco
       */
 
       // Update vars
-      currentAngle = Inertial.heading(deg);
+      currentAngle = Inertial.heading();
       double change = headingPID.update(desiredX, currentAngle);
 
       // Spin drivetrain
@@ -214,7 +237,7 @@ void drive(double desiredX, double desiredY, double precision = 0.5, double seco
     wait(200,msec);
 
     // Update currentAngle
-    currentAngle = Inertial.heading(deg);
+    currentAngle = Inertial.heading();
 
     // Check if desired angle was achieved
     if (currentAngle < (desiredX + precision) && currentAngle > (desiredX - precision)){
@@ -251,10 +274,10 @@ void checkInputs(){
   if (Controller1.ButtonR1.pressing()) {
     intakeLower.spin(fwd,100,pct);
     intakeUpper.spin(fwd,100,pct);
-  } else if (Controller1.ButtonR2.pressing()) {
+  } else if (Controller1.ButtonB.pressing()) {
     intakeLower.spin(reverse,30,pct);
     intakeUpper.spin(reverse,30,pct);
-  } else if (Controller1.ButtonB.pressing()) {
+  } else if (Controller1.ButtonR2.pressing()) {
     intakeLower.spin(fwd,100,pct);
     intakeUpper.spin(fwd,50,pct);
   } else {
@@ -367,18 +390,19 @@ void pre_auton(void) {
   
   // Check if using the GPS is allowed
   if(gpsAllowed == true){
-
+    
     // Wait a short period to allow the GPS to register field strips
     wait(200,msec);
 
+    // Calibrate GPS
+    GPS.calibrate(2);
+
+    while(GPS.isCalibrating()){
+      wait(50,msec);
+    }
+
     // Force a GPS update before the code that needs it beings
     Brain.Screen.print(GPS.heading()); 
-    
-    // Wait a short period to allow the GPS to update
-    wait(200,msec);
-
-    // Set the GPS origin
-    //GPS.setOrigin(xOffsetGPS, yOffsetGPS, inches);
 
     // Calibrate the inertial sensor with the custom calibration function with a 0.5 second averaging time
     inertialGPSCalibrate(0.5);
@@ -432,19 +456,35 @@ void autonomous(void) {
 
   // Wait a little bit
   wait(400, msec);
-  /*
+  
   // Drive backwards to safety
-  leftDrive.spinFor(fwd, 500, deg, 10, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 500, deg, 10, velocityUnits::pct);
-  */
+  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+  
   // Score?!!!!
-  intakeUpper.spinFor(3,sec, 70, velocityUnits::pct);
+  intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
+
+  // The next stuff is for auton skills ONLY
+  leftDrive.spinFor(reverse, 800, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 800, deg, 10, velocityUnits::pct);
+
+  leftDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct);
+
+  leftDrive.spinFor(fwd, 400, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 400, deg, 10, velocityUnits::pct);
+
+  leftDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct);
+
+  clampPneumatic.set(false);
+
+  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
 }
 
 // Code run during the driver control period
 void usercontrol(void) {
-
-  wait(5,sec);
 
   // Start the drivetrain (this doesn't necessarily mean it will move)
   leftDrive.spin(fwd);
@@ -452,7 +492,8 @@ void usercontrol(void) {
 
   // Main loop for driver control code
   while (true == true /*a statement that is true*/) { 
-    renderRobot();
+
+    //renderRobot();
     checkInputs(); // Call checkInputs, which checks buttons and joysticks on the controller and responds accordingly
     wait(20, msec); // Sleep the program for a short amount of time to prevent wasted resources
   }

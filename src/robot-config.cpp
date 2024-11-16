@@ -45,7 +45,7 @@ motor rightTop = motor(PORT13, ratio6_1, true);
 motor_group rightDrive = motor_group(rightBack, rightFront, rightTop);
 
 // Intake motors
-motor intakeUpper = motor(PORT20, ratio18_1, true);
+motor intakeUpper = motor(PORT20, ratio6_1, true);
 motor intakeLower = motor(PORT19, ratio18_1, true); // 5.5W
 
 // Pneumatics
