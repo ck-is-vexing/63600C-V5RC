@@ -347,19 +347,142 @@ void inertialGPSCalibrate(double averageSeconds = 1){
 
 // -------- AUTONOMOUS FUNCTIONS --------
 
-// Autonomous function ran at the start of a competition match when the robot is on the far field side.
-void redGameAuton(){
-  // The season hasn't started yet!
+// Autonomous function ran at the start of a competition matchs
+void leftGameAuton(){
+  // Drive backwards up to the goal
+  leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
+  /*
+  // Continue driving backwards
+  leftDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct);
+  */
+  // Stop the drivetrain not too hard
+  leftDrive.stop(coast);
+  rightDrive.stop(coast);
+
+  // Clamp onto the goal
+  clampPneumatic.set(true);
+
+  // Wait a little bit
+  wait(400, msec);
+  
+  // Drive backwards to safety
+  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+  
+  // Don't question it
+  leftDrive.spinFor(fwd, 350, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 350, deg, 50, velocityUnits::pct);
+
+  // Score?!!!!
+  intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
+  
+  intakeLower.spin(fwd,100,pct);
+  intakeUpper.spin(fwd,50,pct);
+
+  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+
+  wait(3000,msec);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
 }
 
-// Autonomous function ran at the start of a competition match when the robot is on the close field side
-void blueGameAuton(){
-  // Same as in farGameAuton!
+// Autonomous function ran at the start of a competition matchs
+void rightGameAuton(){
+  // Drive backwards up to the goal
+  leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
+  /*
+  // Continue driving backwards
+  leftDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct);
+  */
+  // Stop the drivetrain not too hard
+  leftDrive.stop(coast);
+  rightDrive.stop(coast);
+
+  // Clamp onto the goal
+  clampPneumatic.set(true);
+
+  // Wait a little bit
+  wait(400, msec);
+  
+  // Drive backwards to safety
+  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+  
+  // Don't question it
+  leftDrive.spinFor(reverse, 350, deg, 60, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 350, deg, 60, velocityUnits::pct);
+
+  // Score?!!!!
+  intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
+  
+  intakeLower.spin(fwd,100,pct);
+  intakeUpper.spin(fwd,50,pct);
+
+  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+
+  wait(3000,msec);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+
+  leftDrive.spinFor(reverse, 1200, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1200, deg, 50, velocityUnits::pct);
+
+  leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
 }
 
 // Autonomous skills run.
 void autonSkillsAuton(){
-  // Yet another instance of... you guessed it... the season hasn't started yet!
+  // Drive backwards up to the goal
+  leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
+  /*
+  // Continue driving backwards
+  leftDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct);
+  */
+  // Stop the drivetrain not too hard
+  leftDrive.stop(coast);
+  rightDrive.stop(coast);
+
+  // Clamp onto the goal
+  clampPneumatic.set(true);
+
+  // Wait a little bit
+  wait(400, msec);
+  
+  // Drive backwards to safety
+  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+  
+  // Score?!!!!
+  intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
+
+  // The next stuff is for auton skills ONLY
+  leftDrive.spinFor(reverse, 800, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 800, deg, 10, velocityUnits::pct);
+
+  leftDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct);
+
+  leftDrive.spinFor(fwd, 400, deg, 10, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 400, deg, 10, velocityUnits::pct);
+
+  leftDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct);
+
+  clampPneumatic.set(false);
+
+  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
 }
 
 // Test a couple different PID angles
@@ -439,53 +562,16 @@ void pre_auton(void) {
 // Function run during the autonomous period
 void autonomous(void) {
   
-  // Drive backwards up to the goal
-  leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
-  /*
-  // Continue driving backwards
-  leftDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct);
-  */
-  // Stop the drivetrain not too hard
-  leftDrive.stop(coast);
-  rightDrive.stop(coast);
+  rightGameAuton();
 
-  // Clamp onto the goal
-  clampPneumatic.set(true);
-
-  // Wait a little bit
-  wait(400, msec);
-  
-  // Drive backwards to safety
-  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
-  
-  // Score?!!!!
-  intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
-
-  // The next stuff is for auton skills ONLY
-  leftDrive.spinFor(reverse, 800, deg, 10, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 800, deg, 10, velocityUnits::pct);
-
-  leftDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct);
-
-  leftDrive.spinFor(fwd, 400, deg, 10, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 400, deg, 10, velocityUnits::pct);
-
-  leftDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct);
-
-  clampPneumatic.set(false);
-
-  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
 }
 
 // Code run during the driver control period
 void usercontrol(void) {
-
+  
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+  
   // Start the drivetrain (this doesn't necessarily mean it will move)
   leftDrive.spin(fwd);
   rightDrive.spin(fwd);
