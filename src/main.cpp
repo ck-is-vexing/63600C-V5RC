@@ -18,7 +18,7 @@ competition Competition;
 
 bool skillsMode = false; // A toggle for whether to run the game auton or skills auton
 bool gpsAllowed = true; // A toggle for whether the field has GPS strips or not
-int autonomousNumber; // A number used by the autonomous selector to indiciate which autonomous for the robot to use
+int autonomousNumber; // A number used by the autonomous selector to indicate which autonomous for the robot to use
 
 double xOffsetGPS = 2; // In inches
 double yOffsetGPS = -5.5; // In inches
@@ -31,7 +31,7 @@ PID drivePID = PID(1,0,0,40); // 40ms because of gps update rate
 // -------- SUPPORT FUNCTIONS --------
 
 // Returns the x position of the robot center in inches
-double get_x(){
+double get_x() {
 
   double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (Inertial.heading() * M_PI / 180);
   double deltaX = cos(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);
@@ -40,7 +40,7 @@ double get_x(){
 }
 
 // Returns the y position of the robot center in inches
-double get_y(){
+double get_y() {
 
   double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (Inertial.heading() * M_PI / 180);
   double deltaY = sin(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);
@@ -49,7 +49,7 @@ double get_y(){
 }
 
 // Renders an approximation of the robot position on the Brain screen
-void renderRobot(){
+void renderRobot() {
 
   // VEX Brain is 480x240p
   // 20p = 1 foot
@@ -105,7 +105,7 @@ void renderRobot(){
 
 // PID enabled turn function
 // desiredAngle is the setpoint
-void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
+void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5) {
 
   // Reset the PID
   headingPID.reset();
@@ -182,7 +182,7 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
 // PID enabled drive function
 // desiredX and desiredY are coordinates on the VEX Field, with (0,0) being the red negative corner, and the unit being inches.
 // Does not work right now
-void drive(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 2, int recursions = 5){
+void drive(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 2, int recursions = 5) {
 
   // Calculate the angle
   // pv = sqrt((y2 - y1)^2 + (x2 - x1)^2)
@@ -265,7 +265,7 @@ void drive(double desiredX, double desiredY, double precision = 0.5, double seco
 
 // Check controller inputs and respond
 // Tank drive with triggers controlling clamp and intake
-void checkInputs(){
+void checkInputs() {
 
   // Set the drivetrain motor groups to move based on tank drive principles
   leftDrive.setVelocity(Controller1.Axis3.value(), pct);
@@ -295,7 +295,7 @@ void checkInputs(){
 }
 
 // Inertial sensor calibration function using GPS. This ends up being more precise than setting the robot up the same direction every time.
-void inertialGPSCalibrate(double averageSeconds = 1){
+void inertialGPSCalibrate(double averageSeconds = 1) {
 
   // For the robot to not average the turn at all, set seconds to 0.
 
@@ -346,22 +346,28 @@ void inertialGPSCalibrate(double averageSeconds = 1){
 }
 
 // Load interface to select autonomous program
-void autonSelector(){
+void autonSelector() {
+  // Initialize buttons
   Button redLeft = Button(10, 10, 110, 110, "Red Left", red, white);
   Button redRight = Button(120, 10, 220, 110, "Red Right", red, white);
   Button blueLeft = Button(10, 120, 110, 220, "Blue Left", blue, white);
   Button blueRight = Button(120, 120, 220, 220, "Blue Right", blue, white);
+  Button skills = Button(230, 120, 470, 220, "Skills", orange, white);
+  Button noAuton = Button(230, 10, 470, 110, "No Auton", orange, white);
 
-  // Render out buttons
+  // Clear screen and render buttons
   Brain.Screen.clearScreen();
   redLeft.render();
   redRight.render();
   blueLeft.render();
   blueRight.render();
+  skills.render();
+  noAuton.render();
 
   // Safety to make sure the driver can run if an auton isn't selected
   int t = 0;
 
+  // Repeatedly check for button press and notify user of what was pressed (in case of misclick)
   while (true){
     if (redLeft.isClicked() == true) {
       autonomousNumber = 0;
@@ -383,6 +389,15 @@ void autonSelector(){
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Blue Right Selected");
       break;
+    } else if (skills.isClicked() == true) {
+      autonomousNumber = 4;
+      Brain.Screen.clearScreen();
+      Brain.Screen.printAt(10, 20, "Skills Selected");
+      break;
+    } else if (noAuton.isClicked() == true) {
+      Brain.Screen.clearScreen();
+      Brain.Screen.printAt(10, 20, "Autonomous Cancelled");
+      break;
     }
 
     // Quits if the loop has been running more than 15 seconds
@@ -400,8 +415,15 @@ void autonSelector(){
 
 // -------- AUTONOMOUS FUNCTIONS --------
 
-// Autonomous function ran at the start of a competition matchs
-void blueLeftGameAuton(){
+// Callback to stop intake
+void stopIntake( void *arg ) {
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+}
+
+// Autonomous function ran at the start of a competition match
+void blueLeftGameAuton() {
+  
   // Drive backwards up to the goal
   leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
@@ -444,15 +466,10 @@ void blueLeftGameAuton(){
 
   leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
-
-  wait(1000,msec);
-
-  intakeLower.stop(coast);
-  intakeUpper.stop(coast);
 }
 
-// Autonomous function ran at the start of a competition matchs
-void blueRightGameAuton(){
+// Autonomous function ran at the start of a competition match
+void blueRightGameAuton() {
   // Drive backwards up to the goal
   leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
@@ -495,15 +512,10 @@ void blueRightGameAuton(){
 
   leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
-  
-  wait(1000,msec);
-  
-  intakeLower.stop(coast);
-  intakeUpper.stop(coast);
 }
 
-// Autonomous function ran at the start of a competition matchs
-void redLeftGameAuton(){
+// Autonomous function ran at the start of a competition match
+void redLeftGameAuton() {
   // Drive backwards up to the goal
   leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
@@ -546,15 +558,10 @@ void redLeftGameAuton(){
 
   leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
-
-  wait(1000,msec);
-
-  intakeLower.stop(coast);
-  intakeUpper.stop(coast);
 }
 
-// Autonomous function ran at the start of a competition matchs
-void redRightGameAuton(){
+// Autonomous function ran at the start of a competition match
+void redRightGameAuton() {
   // Drive backwards up to the goal
   leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
@@ -597,15 +604,10 @@ void redRightGameAuton(){
 
   leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
-  
-  wait(1000,msec);
-
-  intakeLower.stop(coast);
-  intakeUpper.stop(coast);
 }
 
-// Autonomous skills run.
-void autonSkillsAuton(){
+// Autonomous skills function
+void autonSkillsAuton() {
   // Drive backwards up to the goal
   leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
@@ -651,7 +653,7 @@ void autonSkillsAuton(){
 }
 
 // Test a couple different PID angles
-void PIDTest(){
+void PIDTest() {
 
   // Wait to make sure that calibration is complete.
   wait(5,sec);
@@ -713,7 +715,7 @@ void pre_auton(void) {
     Controller1.Screen.print("Inertial Calibrated!"); //Print a nice message for the driver
   }
   
-  // Set drivetrain motors to coast, based on Zach's driver prefrence
+  // Set drivetrain motors to coast, based on Zach's driver preference
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
 
@@ -730,33 +732,43 @@ void pre_auton(void) {
 // Function run during the autonomous period
 void autonomous(void) {
   
+  // Schedule the intake to stop just before the end of the autonomous period
+  timer().event(stopIntake, 14800);
+
+  // Run the autonomous that was selected during the pre-auton phase
   if (autonomousNumber == 0){
     redLeftGameAuton();
   } else if (autonomousNumber == 1){
     redRightGameAuton();
   } else if (autonomousNumber == 2){
     blueLeftGameAuton();
-  } else {
+  } else if (autonomousNumber == 3){
     blueRightGameAuton();
+  } else if (autonomousNumber == 4){
+    autonSkillsAuton();
   }
 }
 
 // Code run during the driver control period
 void usercontrol(void) {
   
+  // If the intake wasn't stopped previously, stop it now
   intakeLower.stop(coast);
   intakeUpper.stop(coast);
   
-  // Start the drivetrain (this doesn't necessarily mean it will move)
+  // Prime the drivetrain motors
   leftDrive.spin(fwd);
   rightDrive.spin(fwd);
 
   // Main loop for driver control code
   while (true == true /*a statement that is true*/) { 
-
+    
+    /*
+    // Manual autonomous trigger used for testing, should be commented out for competition
     if (Controller1.ButtonDown.pressing()){
       autonomous();
     }
+    */
 
     //renderRobot();
     checkInputs(); // Call checkInputs, which checks buttons and joysticks on the controller and responds accordingly

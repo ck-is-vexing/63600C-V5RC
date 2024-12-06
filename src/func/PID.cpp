@@ -14,12 +14,8 @@ class PID {
 
     // Proportional, integral, and derivative tuning respectively
     // deltaTime should be the change in time, in ms, between ticks
-    PID(double Kproportional, double Kintegral, double Kderivative, int deltaTime){
-      Kp = Kproportional;
-      Ki = Kintegral;
-      Kd = Kderivative;
-      dT = deltaTime;
-    }
+    PID(double KProportional, double KIntegral, double KDerivative, int deltaTime)
+    : Kp(KProportional), Ki(KIntegral), Kd(KDerivative), dT(deltaTime) {}
 
     // Returns the PID value for one tick
     // setpoint is the desired value for the variable to approach
@@ -38,7 +34,7 @@ class PID {
       // Update Derivative
       // Because the code only executes so often, the equation essentially is (y2 - y1) / (x2 - x1)
       // The y values are the current error, and the previous error
-      // Because the change is always one tick, the denomenator only has to be the length of one tick
+      // Because the change is always one tick, the denominator only has to be the length of one tick
       derivative = (error - oldError) / dT;
 
       // Update old error
@@ -51,9 +47,7 @@ class PID {
     // Resets variables
     // Use when the setpoint changes
     void reset(){
-
       // Reset variables
       integral = 0;
-
     }
 };
