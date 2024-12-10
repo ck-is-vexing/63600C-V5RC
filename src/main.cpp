@@ -352,7 +352,7 @@ void autonSelector() {
   Button redRight = Button(120, 10, 220, 110, "Red Right", red, white);
   Button blueLeft = Button(10, 120, 110, 220, "Blue Left", blue, white);
   Button blueRight = Button(120, 120, 220, 220, "Blue Right", blue, white);
-  Button skills = Button(230, 120, 470, 220, "Skills", orange, white);
+  Button skills = Button(230, 120, 470, 220, "Skills (Red Left)", orange, white);
   Button noAuton = Button(230, 10, 470, 110, "No Auton", orange, white);
 
   // Clear screen and render buttons
@@ -402,6 +402,8 @@ void autonSelector() {
 
     // Quits if the loop has been running more than 15 seconds
     if (t > 750) {
+      Brain.Screen.clearScreen();
+      Brain.Screen.printAt(10, 20, "Autonomous Aborted!");
       break;
     }
 
@@ -464,8 +466,8 @@ void blueLeftGameAuton() {
   leftDrive.spinFor(fwd, 1000, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 1000, deg, 50, velocityUnits::pct);
 
-  leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
+  leftDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct);
 }
 
 // Autonomous function ran at the start of a competition match
@@ -492,9 +494,9 @@ void blueRightGameAuton() {
   leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
   
-  // Don't question it
-  leftDrive.spinFor(fwd, 350, deg, 60, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 350, deg, 60, velocityUnits::pct);
+  // Face second ring
+  leftDrive.spinFor(reverse, 350, deg, 60, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 350, deg, 60, velocityUnits::pct);
 
   // Score?!!!!
   intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
@@ -502,16 +504,29 @@ void blueRightGameAuton() {
   intakeLower.spin(fwd,100,pct);
   intakeUpper.spin(fwd,50,pct);
 
+  // Drive into ring
   leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
 
-  wait(3000,msec);
+  // Face group of 8 rings
+  leftDrive.spinFor(reverse, 500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+  
+  // Intake first ring
+  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
 
-  leftDrive.spinFor(reverse, 1000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 1000, deg, 50, velocityUnits::pct);
+  // Reverse
+  leftDrive.spinFor(reverse, 300, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 300, deg, 50, velocityUnits::pct);
 
-  leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
+  // Face second ring
+  leftDrive.spinFor(reverse, 100, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 100, deg, 50, velocityUnits::pct);
+
+  // Intake second ring
+  leftDrive.spinFor(fwd, 350, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 350, deg, 50, velocityUnits::pct);
 }
 
 // Autonomous function ran at the start of a competition match
@@ -556,8 +571,8 @@ void redLeftGameAuton() {
   leftDrive.spinFor(fwd, 1000, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 1000, deg, 50, velocityUnits::pct);
 
-  leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
+  leftDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct);
 }
 
 // Autonomous function ran at the start of a competition match
@@ -607,15 +622,11 @@ void redRightGameAuton() {
 }
 
 // Autonomous skills function
-void autonSkillsAuton() {
+void oldAutonSkillsAuton() {
   // Drive backwards up to the goal
   leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
   rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
-  /*
-  // Continue driving backwards
-  leftDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 600, deg, 10, velocityUnits::pct);
-  */
+
   // Stop the drivetrain not too hard
   leftDrive.stop(coast);
   rightDrive.stop(coast);
@@ -633,7 +644,6 @@ void autonSkillsAuton() {
   // Score?!!!!
   intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
 
-  // The next stuff is for auton skills ONLY
   leftDrive.spinFor(reverse, 800, deg, 10, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 800, deg, 10, velocityUnits::pct);
 
@@ -650,6 +660,75 @@ void autonSkillsAuton() {
 
   leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+}
+
+// New autonomous skills function (certified better)
+// SETUP is red left, facing 45 deg at goal, robot is on the side of the alliance stake
+void autonSkillsAuton(){
+  // Drive up to goal
+  leftDrive.spinFor(reverse, 800, deg, 20, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 800, deg, 20, velocityUnits::pct);
+
+  // Clamp
+  clampPneumatic.set(true);
+
+  // Start intake
+  intakeLower.spin(fwd,100,pct);
+  intakeUpper.spin(fwd,50,pct);
+
+  // Wait a bit
+  wait(1000,msec);
+
+  // Spin to face first ring
+  leftDrive.spinFor(reverse, 880, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 880, deg, 50, velocityUnits::pct);
+
+  // Grab ring
+  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+
+  wait(3,sec);
+
+  // Spin to face second ring
+  leftDrive.spinFor(reverse, 400, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 400, deg, 50, velocityUnits::pct);
+
+  // Grab ring
+  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+
+  wait(3,sec);
+
+  // Spin to third and fourth rings
+  leftDrive.spinFor(reverse, 450, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 450, deg, 50, velocityUnits::pct);
+
+  // Grab rings
+  leftDrive.spinFor(fwd, 2000, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2000, deg, 50, velocityUnits::pct);
+
+  wait(3,sec);
+
+  // Spin to face corner
+  leftDrive.spinFor(reverse, 800, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 800, deg, 50, velocityUnits::pct);
+
+  // Reverse goal into corner
+  leftDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct);
+
+  // Let go
+  clampPneumatic.set(false);
+  
+  // Drive a bit away
+  leftDrive.spinFor(fwd, 3500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 3500, deg, 50, velocityUnits::pct);
+
+  leftDrive.spinFor(fwd, 200, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 200, deg, 50, velocityUnits::pct);
+
+  leftDrive.spinFor(fwd, 12000, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 12000, deg, 45, velocityUnits::pct);
 }
 
 // Test a couple different PID angles
@@ -731,9 +810,12 @@ void pre_auton(void) {
 
 // Function run during the autonomous period
 void autonomous(void) {
-  
-  // Schedule the intake to stop just before the end of the autonomous period
-  timer().event(stopIntake, 14800);
+
+  // Doesn't run if it is skills or something else
+  if (autonomousNumber < 4){
+    // Schedule the intake to stop just before the end of the autonomous period
+    timer().event(stopIntake, 14800);
+  }
 
   // Run the autonomous that was selected during the pre-auton phase
   if (autonomousNumber == 0){
@@ -751,7 +833,7 @@ void autonomous(void) {
 
 // Code run during the driver control period
 void usercontrol(void) {
-  
+
   // If the intake wasn't stopped previously, stop it now
   intakeLower.stop(coast);
   intakeUpper.stop(coast);
@@ -763,13 +845,29 @@ void usercontrol(void) {
   // Main loop for driver control code
   while (true == true /*a statement that is true*/) { 
     
-    /*
     // Manual autonomous trigger used for testing, should be commented out for competition
-    if (Controller1.ButtonDown.pressing()){
-      autonomous();
-    }
-    */
+    if (Controller1.ButtonX.pressing()){
 
+      // Schedule the intake to stop just before the end of the autonomous period
+      timer().event(stopIntake, 14800);
+
+      // Run the autonomous that was selected during the pre-auton phase
+      if (autonomousNumber == 0){
+        redLeftGameAuton();
+      } else if (autonomousNumber == 1){
+        redRightGameAuton(); 
+      } else if (autonomousNumber == 2){
+        blueLeftGameAuton();
+      } else if (autonomousNumber == 3){
+        blueRightGameAuton();
+      } else if (autonomousNumber == 4){
+        autonSkillsAuton();
+      }
+
+      leftDrive.spin(fwd);
+      rightDrive.spin(fwd);
+    }
+    
     //renderRobot();
     checkInputs(); // Call checkInputs, which checks buttons and joysticks on the controller and responds accordingly
     wait(20, msec); // Sleep the program for a short amount of time to prevent wasted resources
