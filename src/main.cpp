@@ -3,11 +3,14 @@ PLEASE LOOK INTO THE GPS CALIBRATION LATER THANKS
 */
 
 
+// Commented out important stuff, read over whole code!
+
 // -------- SETUP --------
 
 #include "vex.h" // Include the vex header
 #include "func/PID.cpp" // Include the PID class
 #include "func/Button.cpp" // Include button creation class
+#include <cmath>
 using namespace vex; // Set the namespace to vex
 
 // A global instance of competition
@@ -22,9 +25,8 @@ int autonomousNumber; // A number used by the autonomous selector to indicate wh
 
 double xOffsetGPS = 2; // In inches
 double yOffsetGPS = -5.5; // In inches
-double angleOffsetGPS = 180; // In degrees
 
-PID headingPID = PID(0.7, 0, 0, 10);
+PID headingPID = PID(0.6, 0, 30, 10);
 PID drivePID = PID(1,0,0,40); // 40ms because of gps update rate
 
 
@@ -105,7 +107,7 @@ void renderRobot() {
 
 // PID enabled turn function
 // desiredAngle is the setpoint
-void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5) {
+void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5, double minimumSpeed = 0.8) {
 
   // Reset the PID
   headingPID.reset();
@@ -118,26 +120,23 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
 
     // Loop of ticks, converting seconds allowed into sets of 10 ms
     for (int t = 0; t < (secondsAllowed * 100); t++){
-      
-      /*
-      //Find the shortest possible route to reach target angle
-      if (error > 180){
-        error -= 360;
-      } else if (error < -180){
-        error += 360;
-      }
-      */
 
       // Update vars
       currentAngle = Inertial.heading();
       double change = headingPID.update(desiredAngle, currentAngle);
+
+      if (abs(change) < minimumSpeed) {
+        change = std::copysign(minimumSpeed, change);
+      }
 
       // Spin drivetrain
       leftDrive.spin(fwd,change,pct);
       rightDrive.spin(reverse,change,pct);
 
       // Check for completion of the tick loop
-      if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
+      if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
+        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) || //Check for completion at a near 0 or 360 degree angle
+        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){ //Same as above
 
         // Break the tick loop
         break;
@@ -157,8 +156,10 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
     currentAngle = Inertial.heading();
 
     // Check if desired angle was achieved
-    if (currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)){
-      
+    if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
+        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) || //Check for completion at a near 0 or 360 degree angle
+        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){ //Same as above
+    
       // Update controller screen to tell user the robot has finished the turn, along with debug information
       Controller1.Screen.clearScreen();
       Controller1.Screen.setCursor(1, 1);
@@ -418,7 +419,7 @@ void autonSelector() {
 // -------- AUTONOMOUS FUNCTIONS --------
 
 // Callback to stop intake
-void stopIntake( void *arg ) {
+void stopIntake(void *arg) {
   intakeLower.stop(coast);
   intakeUpper.stop(coast);
 }
@@ -734,9 +735,6 @@ void autonSkillsAuton(){
 // Test a couple different PID angles
 void PIDTest() {
 
-  // Wait to make sure that calibration is complete.
-  wait(5,sec);
-
   // Test different angles
   turnTo(180);
   wait(3,sec);
@@ -761,14 +759,7 @@ void pre_auton(void) {
   if(gpsAllowed == true){
     
     // Wait a short period to allow the GPS to register field strips
-    wait(200,msec);
-
-    // Calibrate GPS
-    GPS.calibrate(2);
-
-    while(GPS.isCalibrating()){
-      wait(50,msec);
-    }
+    wait(300,msec);
 
     // Force a GPS update before the code that needs it beings
     Brain.Screen.print(GPS.heading()); 
@@ -785,13 +776,13 @@ void pre_auton(void) {
     while(Inertial.isCalibrating()){
 
       // Wait to prevent wasted resources by iterating too fast
-      wait(100,msec);
+      wait(40,msec);
 
     }
 
     // Let the driver know that calibration is complete
-    Controller1.Screen.setCursor(3, 1); //Set the cursor to the next available row
-    Controller1.Screen.print("Inertial Calibrated!"); //Print a nice message for the driver
+    Controller1.Screen.setCursor(3, 1);
+    Controller1.Screen.print("Inertial Calibrated!");
   }
   
   // Set drivetrain motors to coast, based on Zach's driver preference
@@ -802,7 +793,7 @@ void pre_auton(void) {
   clampPneumatic.set(false);
 
   // Run Autonomous Selector
-  autonSelector();
+  //autonSelector();
 
   // Initialize Robot Configuration
   vexcodeInit();
@@ -848,6 +839,9 @@ void usercontrol(void) {
     // Manual autonomous trigger used for testing, should be commented out for competition
     if (Controller1.ButtonX.pressing()){
 
+      PIDTest();
+
+      /*
       // Schedule the intake to stop just before the end of the autonomous period
       timer().event(stopIntake, 14800);
 
@@ -866,6 +860,7 @@ void usercontrol(void) {
 
       leftDrive.spin(fwd);
       rightDrive.spin(fwd);
+      */
     }
     
     //renderRobot();

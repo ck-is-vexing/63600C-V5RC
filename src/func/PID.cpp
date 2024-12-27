@@ -1,4 +1,4 @@
-#include "vex.h" // Include VEX headers
+#include "vex.h"
 
 // Contains a general PID implementation to be used for more specific applications, such as turnTo
 class PID {
@@ -9,8 +9,8 @@ class PID {
     double integral = 0; // Current integral value
     double derivative; // Current derivative value
     int dT; // The change in time, in ms, of every tick
-    double oldError = 0; // The previous error, used for calculating Integral
   public:
+    double oldError; // The previous error, used for calculating Integral
 
     // Proportional, integral, and derivative tuning respectively
     // deltaTime should be the change in time, in ms, between ticks
@@ -47,7 +47,6 @@ class PID {
     // Resets variables
     // Use when the setpoint changes
     void reset(){
-      // Reset variables
       integral = 0;
     }
 };

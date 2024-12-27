@@ -52,10 +52,11 @@ motor intakeLower = motor(PORT19, ratio18_1, true); // 5.5W
 digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.A);
 
 // Other Sensors
-gps GPS = gps(PORT15);
-inertial Inertial = inertial(PORT6);
+gps GPS = gps(PORT6, 180); // Second number is degree offset from facing the front of the robot
+inertial Inertial = inertial(PORT1);
 
 
 void vexcodeInit( void ) {
   // sí
+  // ...
 }
