@@ -52,7 +52,7 @@ motor intakeLower = motor(PORT19, ratio18_1, true); // 5.5W
 digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.A);
 
 // Other Sensors
-gps GPS = gps(PORT6, 180); // Second number is degree offset from facing the front of the robot
+gps GPS = gps(PORT6, 177.8); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the tower is slightly bent :(
 inertial Inertial = inertial(PORT1);
 
 

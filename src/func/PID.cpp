@@ -9,13 +9,14 @@ class PID {
     double integral = 0; // Current integral value
     double derivative; // Current derivative value
     int dT; // The change in time, in ms, of every tick
+    bool rF; // Toggle the rotational error fix
   public:
     double oldError; // The previous error, used for calculating Integral
 
     // Proportional, integral, and derivative tuning respectively
     // deltaTime should be the change in time, in ms, between ticks
-    PID(double KProportional, double KIntegral, double KDerivative, int deltaTime)
-    : Kp(KProportional), Ki(KIntegral), Kd(KDerivative), dT(deltaTime) {}
+    PID(double KProportional, double KIntegral, double KDerivative, int deltaTime, bool rotationFix = false)
+    : Kp(KProportional), Ki(KIntegral), Kd(KDerivative), dT(deltaTime), rF(rotationFix) {}
 
     // Returns the PID value for one tick
     // setpoint is the desired value for the variable to approach
@@ -26,12 +27,18 @@ class PID {
       // It's the difference between what is desired and what the current value is.
       double error = setpoint - pv;
 
+      if (error > 180 && rF == true){
+        error -= 360;
+      } else if (error < -180 && rF == true){
+        error += 360;
+      }
+
       // Update integral
       // The integral calculates the area in between the graph of pv and the x-axis
       // To calculate integral, every tick the 
       integral += error * dT;
 
-      // Update Derivative
+      // Update Derivative (approximation)
       // Because the code only executes so often, the equation essentially is (y2 - y1) / (x2 - x1)
       // The y values are the current error, and the previous error
       // Because the change is always one tick, the denominator only has to be the length of one tick

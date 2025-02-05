@@ -1,9 +1,4 @@
-/*
-PLEASE LOOK INTO THE GPS CALIBRATION LATER THANKS
-*/
-
-
-// Commented out important stuff, read over whole code!
+// Improve the system for when there are no field strips
 
 // -------- SETUP --------
 
@@ -11,6 +6,7 @@ PLEASE LOOK INTO THE GPS CALIBRATION LATER THANKS
 #include "func/PID.cpp" // Include the PID class
 #include "func/Button.cpp" // Include button creation class
 #include <cmath>
+#include <iostream>
 using namespace vex; // Set the namespace to vex
 
 // A global instance of competition
@@ -19,16 +15,16 @@ competition Competition;
 
 // -------- GLOBAL VARIABLES --------
 
-bool skillsMode = false; // A toggle for whether to run the game auton or skills auton
-bool gpsAllowed = true; // A toggle for whether the field has GPS strips or not
+const bool gpsAllowed = true; // A toggle for whether the field has GPS strips or not
 int autonomousNumber; // A number used by the autonomous selector to indicate which autonomous for the robot to use
+int gpsBlueAngle = 90;
 
-double xOffsetGPS = 2; // In inches
-double yOffsetGPS = -5.5; // In inches
+const double xOffsetGPS = 2; // In inches
+const double yOffsetGPS = -5.5; // In inches
 
-PID headingPID = PID(0.6, 0, 30, 10);
-PID drivePID = PID(1,0,0,40); // 40ms because of gps update rate
-
+PID headingPID = PID(0.6, 0, 28, 10, true);
+PID fancyDrivePID = PID(1, 0, 0, 40); // 40ms because of gps update rate
+PID drivePID = PID(0.01, 0, 40, 10);
 
 // -------- SUPPORT FUNCTIONS --------
 
@@ -107,7 +103,7 @@ void renderRobot() {
 
 // PID enabled turn function
 // desiredAngle is the setpoint
-void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5, double minimumSpeed = 0.8) {
+void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5, double minimumSpeed = 1) {
 
   // Reset the PID
   headingPID.reset();
@@ -121,11 +117,11 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
     // Loop of ticks, converting seconds allowed into sets of 10 ms
     for (int t = 0; t < (secondsAllowed * 100); t++){
 
-      // Update vars
+      // Update angle
       currentAngle = Inertial.heading();
       double change = headingPID.update(desiredAngle, currentAngle);
 
-      if (abs(change) < minimumSpeed) {
+      if (std::abs(change) < minimumSpeed) {
         change = std::copysign(minimumSpeed, change);
       }
 
@@ -150,7 +146,7 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
     rightDrive.stop(brake);
 
     // Wait a little bit in case the system is still in motion
-    wait(200,msec);
+    wait(300,msec);
 
     // Update currentAngle
     currentAngle = Inertial.heading();
@@ -183,7 +179,7 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
 // PID enabled drive function
 // desiredX and desiredY are coordinates on the VEX Field, with (0,0) being the red negative corner, and the unit being inches.
 // Does not work right now
-void drive(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 2, int recursions = 5) {
+void fancyDriveTo(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 10, int recursions = 5) {
 
   // Calculate the angle
   // pv = sqrt((y2 - y1)^2 + (x2 - x1)^2)
@@ -192,7 +188,7 @@ void drive(double desiredX, double desiredY, double precision = 0.5, double seco
   turnTo(atan(3));
 
   headingPID.reset();
-  drivePID.reset();
+  fancyDrivePID.reset();
 
   // vars
   double currentAngle;
@@ -264,6 +260,100 @@ void drive(double desiredX, double desiredY, double precision = 0.5, double seco
   }
 }
 
+// PID enabled drive function
+// desiredDistance is the setpoint
+void driveTo(double desiredInches, directionType direction, double desiredAngle, double precision = 0.5, double secondsAllowed = 10, int recursions = 5) {
+
+  // Reset the PIDs
+  headingPID.reset();
+  drivePID.reset();
+
+  // vars
+  double currentDistance = 0;
+  double currentAngle;
+  double oldDeg = (leftDrive.position(degrees) + rightDrive.position(degrees)) / 2;
+  double currentDeg;
+
+
+  // Loop of recursions
+  for (int i = 0; i < recursions; i++){
+
+    // Loop of ticks, converting seconds allowed into sets of 10 ms
+    for (int t = 0; t < (secondsAllowed * 100); t++){
+
+      // Update angle
+      currentAngle = Inertial.heading();
+      double change = headingPID.update(desiredAngle, currentAngle);
+
+      // Update distance
+      currentDeg = (leftDrive.position(degrees) + rightDrive.position(degrees)) / 2;
+      currentDistance += (currentDeg - oldDeg) * (0.0170169602069);
+      oldDeg = currentDeg;
+      std::cout << currentDistance << std::endl;
+
+      change += drivePID.update(desiredInches, currentDistance);
+
+      // Spin drivetrain
+      leftDrive.spin(direction,change * 0.2,pct);
+      rightDrive.spin(direction,change * 0.2,pct);
+
+      // Check for completion of the tick loop
+      if (currentDistance < (desiredInches + precision) && currentDistance > (desiredInches - precision)){ //Same as above
+
+        // Break the tick loop
+        break;
+      }
+
+      // Prevent wasted resources by waiting a short period of time before iterating
+      wait(10,msec); 
+    }
+
+    leftDrive.stop(brake);
+    rightDrive.stop(brake);
+
+    // Wait a little bit in case the system is still in motion
+    wait(300,msec);
+
+    // Update currentAngle
+    currentAngle = Inertial.heading();
+
+    // Check if desired angle was achieved
+    if (currentDistance < (desiredInches + precision) && currentDistance > (desiredInches - precision)){ //Same as above
+    
+      // Update controller screen to tell user the robot has finished the turn, along with debug information
+      Controller1.Screen.clearScreen();
+      Controller1.Screen.setCursor(1, 1);
+      Controller1.Screen.print("Drive Complete!");
+      Controller1.Screen.setCursor(2, 1);
+      Controller1.Screen.print("Angle: ");
+      Controller1.Screen.print(currentAngle);
+
+      // Stop drivetrain
+      leftDrive.stop(coast);
+      rightDrive.stop(coast);
+
+      // Break the recursion loop and the whole turnTo, because it has reached the setpoint
+      break;
+    }  
+
+    // If the correct angle was not achieved, the code will recurse
+  }
+}
+
+// Not-so-pid drive. Takes a VEX direction and the distance in inches. Optionally add a specific velocity
+void drive(directionType direction, double inches, int velocityPercent = 50){
+
+  //Conversion from inches to degrees of rotation for the motor.
+  double motorDegrees = inches / (0.0170169602069); // inches divided by (Circumference of the wheels) * (The gear ratio of the robot) / (360, to put the number into degrees)
+  Controller1.Screen.clearScreen();
+  Controller1.Screen.setCursor(1,1);
+  Controller1.Screen.print(motorDegrees);
+  Controller1.Screen.setCursor(2,1);
+  Controller1.Screen.print(inches);
+  leftDrive.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct, false);
+  rightDrive.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct);
+}
+
 // Check controller inputs and respond
 // Tank drive with triggers controlling clamp and intake
 void checkInputs() {
@@ -308,7 +398,7 @@ void inertialGPSCalibrate(double averageSeconds = 1) {
   for(i = 0; i < (averageSeconds * 25) + 1; i++){
 
     // Add the GPS heading to the total
-    averagedHeading += GPS.heading();
+    averagedHeading += (GPS.heading() - gpsBlueAngle + 90);
 
     // Wait a short period because the GPS only updates a certain amount of times a second
     wait(40,msec);
@@ -353,8 +443,10 @@ void autonSelector() {
   Button redRight = Button(120, 10, 220, 110, "Red Right", red, white);
   Button blueLeft = Button(10, 120, 110, 220, "Blue Left", blue, white);
   Button blueRight = Button(120, 120, 220, 220, "Blue Right", blue, white);
-  Button skills = Button(230, 120, 470, 220, "Skills (Red Left)", orange, white);
-  Button noAuton = Button(230, 10, 470, 110, "No Auton", orange, white);
+  Button skills = Button(230, 120, 330, 220, "Skills (Red Left)", orange, white);
+  Button noAuton = Button(230, 10, 330, 110, "No Auton", orange, white);
+  Button decreaseAngle = Button(340, 120, 400, 180, "<", green, white);
+  Button increaseAngle = Button(410, 120, 470, 180, ">", green, white);
 
   // Clear screen and render buttons
   Brain.Screen.clearScreen();
@@ -364,10 +456,24 @@ void autonSelector() {
   blueRight.render();
   skills.render();
   noAuton.render();
+  decreaseAngle.render();
+  increaseAngle.render();
+
+  Brain.Screen.setPenColor(white);
+  Brain.Screen.setCursor(2, 34);
+  Brain.Screen.print("Blue Side Angle:");
+  Brain.Screen.setCursor(3, 39);
+  Brain.Screen.print(90);
 
   // Safety to make sure the driver can run if an auton isn't selected
   int t = 0;
 
+  gpsBlueAngle -= 90;
+  autonomousNumber = 4;
+  Brain.Screen.clearScreen();
+  Brain.Screen.printAt(10, 20, "Skills Selected");
+  wait(400,msec);
+  /*
   // Repeatedly check for button press and notify user of what was pressed (in case of misclick)
   while (true){
     if (redLeft.isClicked() == true) {
@@ -399,10 +505,24 @@ void autonSelector() {
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Cancelled");
       break;
+    } else if (decreaseAngle.isClicked() == true) {
+      gpsBlueAngle -= 90;
+      Brain.Screen.setPenColor(white);
+      Brain.Screen.clearLine(3);
+      Brain.Screen.setCursor(3, 39);
+      Brain.Screen.print(gpsBlueAngle);
+      wait(300, msec);
+    } else if (increaseAngle.isClicked() == true) {
+      gpsBlueAngle += 90;
+      Brain.Screen.setPenColor(white);
+      Brain.Screen.clearLine(3);
+      Brain.Screen.setCursor(3, 39);
+      Brain.Screen.print(gpsBlueAngle);
+      wait(300, msec);
     }
 
-    // Quits if the loop has been running more than 15 seconds
-    if (t > 750) {
+    // Quits if the loop has been running more than 30 seconds
+    if (t > 1500) {
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Aborted!");
       break;
@@ -414,6 +534,7 @@ void autonSelector() {
     // Wait a bit
     wait(20, msec);
   }
+  */
 }
 
 // -------- AUTONOMOUS FUNCTIONS --------
@@ -422,6 +543,25 @@ void autonSelector() {
 void stopIntake(void *arg) {
   intakeLower.stop(coast);
   intakeUpper.stop(coast);
+}
+
+// Test a couple different PID angles
+void PIDTest() {
+  // Test different angles
+  turnTo(180);
+  wait(2,sec);
+
+  turnTo(90);
+  wait(2,sec);
+
+  turnTo(135);
+  wait(2,sec);
+
+  turnTo(0);
+  wait(2,sec);
+
+  turnTo(180);
+  wait(2,sec);
 }
 
 // Autonomous function ran at the start of a competition match
@@ -495,39 +635,30 @@ void blueRightGameAuton() {
   leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
   
-  // Face second ring
-  leftDrive.spinFor(reverse, 350, deg, 60, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 350, deg, 60, velocityUnits::pct);
+  // Don't question it
+  turnTo(0,2);
 
-  // Score?!!!!
-  intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
-  
   intakeLower.spin(fwd,100,pct);
   intakeUpper.spin(fwd,50,pct);
 
-  // Drive into ring
-  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+  wait(1,sec);
 
-  // Face group of 8 rings
-  leftDrive.spinFor(reverse, 500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+  leftDrive.spinFor(fwd, 1500, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1500, deg, 50, velocityUnits::pct);
+
+  wait(1,sec);
+
+  turnTo(270,1);
+  leftDrive.spinFor(fwd, 850, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 850, deg, 50, velocityUnits::pct);
   
-  // Intake first ring
-  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+  wait(3,sec);
 
-  // Reverse
-  leftDrive.spinFor(reverse, 300, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 300, deg, 50, velocityUnits::pct);
-
-  // Face second ring
-  leftDrive.spinFor(reverse, 100, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 100, deg, 50, velocityUnits::pct);
-
-  // Intake second ring
-  leftDrive.spinFor(fwd, 350, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 350, deg, 50, velocityUnits::pct);
+  /*
+  turnTo(180);
+  leftDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct);
+  */
 }
 
 // Autonomous function ran at the start of a competition match
@@ -555,8 +686,7 @@ void redLeftGameAuton() {
   rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
   
   // Don't question it
-  leftDrive.spinFor(fwd, 350, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 350, deg, 50, velocityUnits::pct);
+  turnTo(0);
 
   // Score?!!!!
   intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
@@ -569,8 +699,7 @@ void redLeftGameAuton() {
 
   wait(3000,msec);
 
-  leftDrive.spinFor(fwd, 1000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 1000, deg, 50, velocityUnits::pct);
+  turnTo(180);
 
   leftDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct, false);
   rightDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct);
@@ -601,8 +730,7 @@ void redRightGameAuton() {
   rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
   
   // Don't question it
-  leftDrive.spinFor(fwd, 350, deg, 60, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 350, deg, 60, velocityUnits::pct);
+  turnTo(180);
 
   // Score?!!!!
   intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
@@ -615,146 +743,174 @@ void redRightGameAuton() {
 
   wait(3000,msec);
 
-  leftDrive.spinFor(reverse, 1000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 1000, deg, 50, velocityUnits::pct);
+  turnTo(0);
 
-  leftDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 2100, deg, 50, velocityUnits::pct);
-}
-
-// Autonomous skills function
-void oldAutonSkillsAuton() {
-  // Drive backwards up to the goal
-  leftDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 2300, deg, 30, velocityUnits::pct);
-
-  // Stop the drivetrain not too hard
-  leftDrive.stop(coast);
-  rightDrive.stop(coast);
-
-  // Clamp onto the goal
-  clampPneumatic.set(true);
-
-  // Wait a little bit
-  wait(400, msec);
-  
-  // Drive backwards to safety
-  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
-  
-  // Score?!!!!
-  intakeUpper.spinFor(3,sec, 40, velocityUnits::pct);
-
-  leftDrive.spinFor(reverse, 800, deg, 10, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 800, deg, 10, velocityUnits::pct);
-
-  leftDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 1500, deg, 50, velocityUnits::pct);
-
-  leftDrive.spinFor(fwd, 400, deg, 10, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 400, deg, 10, velocityUnits::pct);
-
-  leftDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct);
-
-  clampPneumatic.set(false);
-
-  leftDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 500, deg, 50, velocityUnits::pct);
+  leftDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2200, deg, 50, velocityUnits::pct);
 }
 
 // New autonomous skills function (certified better)
 // SETUP is red left, facing 45 deg at goal, robot is on the side of the alliance stake
 void autonSkillsAuton(){
+
+  // ************** FIRST CORNER **************
   // Drive up to goal
-  leftDrive.spinFor(reverse, 800, deg, 20, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 800, deg, 20, velocityUnits::pct);
+  leftDrive.spinFor(reverse, 500, deg, 20, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 500, deg, 20, velocityUnits::pct);
 
   // Clamp
   clampPneumatic.set(true);
 
   // Start intake
   intakeLower.spin(fwd,100,pct);
-  intakeUpper.spin(fwd,50,pct);
+  intakeUpper.spin(fwd,100,pct);
 
   // Wait a bit
   wait(1000,msec);
 
   // Spin to face first ring
-  leftDrive.spinFor(reverse, 880, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 880, deg, 50, velocityUnits::pct);
+  turnTo(90, 1.5);
 
   // Grab ring
-  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+  leftDrive.spinFor(fwd, 1600, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1600, deg, 50, velocityUnits::pct);
 
-  wait(3,sec);
+  //wait(1,sec);
 
   // Spin to face second ring
-  leftDrive.spinFor(reverse, 400, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 400, deg, 50, velocityUnits::pct);
+  turnTo(0, 2);
 
   // Grab ring
-  leftDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 1300, deg, 50, velocityUnits::pct);
+  leftDrive.spinFor(fwd, 1550, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1550, deg, 50, velocityUnits::pct);
 
-  wait(3,sec);
+  //wait(1,sec);
 
   // Spin to third and fourth rings
-  leftDrive.spinFor(reverse, 450, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 450, deg, 50, velocityUnits::pct);
+  turnTo(270, 1.5);
 
   // Grab rings
-  leftDrive.spinFor(fwd, 2000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 2000, deg, 50, velocityUnits::pct);
+  leftDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct);
 
-  wait(3,sec);
+  //wait(1,sec);
 
-  // Spin to face corner
-  leftDrive.spinFor(reverse, 800, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 800, deg, 50, velocityUnits::pct);
+  // Spin to face final ring
+  turnTo(48, 2);
+
+  // Pick up ring
+  leftDrive.spinFor(fwd, 800, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 800, deg, 30, velocityUnits::pct);
+
+  wait(1,sec);
+
+  turnTo(110, 2);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
 
   // Reverse goal into corner
-  leftDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 2000, deg, 50, velocityUnits::pct);
+  drive(reverse, 8, 20);
 
   // Let go
   clampPneumatic.set(false);
+  intakeLower.spin(reverse,100,pct);
+  intakeUpper.spin(reverse,100,pct);
+
+  wait(400,msec);
+
+  drive(fwd, 7, 20);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+
+  turnTo(0,0.3);
+
+  drive(reverse, 69, 40);
+
+  drive(reverse, 8, 20);
+
+  // Clamp
+  clampPneumatic.set(true);
+
+  drive(reverse, 5, 20);
+
+  wait(100, msec);
+
+  // ************** SECOND CORNER **************
   
-  // Drive a bit away
-  leftDrive.spinFor(fwd, 3500, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 3500, deg, 50, velocityUnits::pct);
+  // Spin to face first ring
+  turnTo(90, 1);
 
-  leftDrive.spinFor(fwd, 200, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(reverse, 200, deg, 50, velocityUnits::pct);
+  // Start intake
+  intakeLower.spin(fwd,100,pct);
+  intakeUpper.spin(fwd,100,pct);
 
-  leftDrive.spinFor(fwd, 12000, deg, 50, velocityUnits::pct, false);
-  rightDrive.spinFor(fwd, 12000, deg, 45, velocityUnits::pct);
+  // Grab ring
+  drive(fwd, 32, 30);
+
+  //wait(1,sec);
+
+  // Face second ring
+  turnTo(155, 1);
+
+  drive(fwd, 40);
+
+  //wait(1,sec);
+
+  drive(reverse, 4);
+
+  // Spin to face third ring
+  turnTo(285, 2);
+
+  // Grab ring
+  drive(fwd, 23);
+
+  //wait(1,sec);
+
+  // Spin to fourth and fifth rings
+  turnTo(270, 1);
+
+  // Grab rings
+  leftDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct);
+
+  wait(0.5,sec);
+
+  // Spin to face final ring
+  turnTo(135, 2);
+
+  // Pick up ring
+  drive(fwd, 20);
+
+  wait(1,sec);
+
+  turnTo(75, 2);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+
+  // Reverse goal into corner
+  drive(reverse, 12, 22);
+
+  // Let go
+  clampPneumatic.set(false);
+  intakeLower.spin(reverse,100,pct);
+  intakeUpper.spin(reverse,100,pct);
+
+  wait(400,msec);
+
+  drive(fwd, 5, 20);
 }
-
-// Test a couple different PID angles
-void PIDTest() {
-
-  // Test different angles
-  turnTo(180);
-  wait(3,sec);
-
-  turnTo(90);
-  wait(3,sec);
-
-  turnTo(135);
-  wait(3,sec);
-
-  turnTo(0);
-  wait(3,sec);
-}
-
 
 // -------- GAME FUNCTIONS --------
 
 // Setup code ran before the competition starts
 void pre_auton(void) {
   
+  // Display the autonomous selector on the brain screen
+  autonSelector();
+
   // Check if using the GPS is allowed
   if(gpsAllowed == true){
     
@@ -789,11 +945,8 @@ void pre_auton(void) {
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
 
-  // Set the clamp to be correct;
+  // Make sure the clamp js not engaged
   clampPneumatic.set(false);
-
-  // Run Autonomous Selector
-  //autonSelector();
 
   // Initialize Robot Configuration
   vexcodeInit();
@@ -836,14 +989,17 @@ void usercontrol(void) {
   // Main loop for driver control code
   while (true == true /*a statement that is true*/) { 
     
+
+    // ******************************************************************************************************* THE AUTON SELECTOR IS DISABLED
+
     // Manual autonomous trigger used for testing, should be commented out for competition
     if (Controller1.ButtonX.pressing()){
 
-      PIDTest();
-
-      /*
-      // Schedule the intake to stop just before the end of the autonomous period
-      timer().event(stopIntake, 14800);
+      // Doesn't run if it is skills or something else
+      if (autonomousNumber < 4){
+        // Schedule the intake to stop just before the end of the autonomous period
+        timer().event(stopIntake, 14800);
+      }
 
       // Run the autonomous that was selected during the pre-auton phase
       if (autonomousNumber == 0){
@@ -860,7 +1016,6 @@ void usercontrol(void) {
 
       leftDrive.spin(fwd);
       rightDrive.spin(fwd);
-      */
     }
     
     //renderRobot();
