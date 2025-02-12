@@ -1,6 +1,7 @@
-#include "vex.h"
+#include "vex.h" // Include VEX headers
 
-// Contains a general PID implementation to be used for more specific applications, such as turnTo
+// Contains a general PID implementation to be used for more specific applications
+// Read the turnTo function in main.cpp for an application of this class
 class PID {
   private:
     double Kp; // Proportional Tuning
@@ -9,7 +10,7 @@ class PID {
     double integral = 0; // Current integral value
     double derivative; // Current derivative value
     int dT; // The change in time, in ms, of every tick
-    bool rF; // Toggle the rotational error fix
+    bool rF; // Toggle for the rotational error fix
   public:
     double oldError; // The previous error, used for calculating Integral
 
@@ -27,6 +28,7 @@ class PID {
       // It's the difference between what is desired and what the current value is.
       double error = setpoint - pv;
 
+      // If rotationFix is enabled, this code makes it so the error is facing the correct direction
       if (error > 180 && rF == true){
         error -= 360;
       } else if (error < -180 && rF == true){
@@ -35,7 +37,7 @@ class PID {
 
       // Update integral
       // The integral calculates the area in between the graph of pv and the x-axis
-      // To calculate integral, every tick the 
+      // To calculate integral, every tick the new area is added to the total sum
       integral += error * dT;
 
       // Update Derivative (approximation)

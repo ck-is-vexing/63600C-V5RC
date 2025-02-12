@@ -48,11 +48,14 @@ motor_group rightDrive = motor_group(rightBack, rightFront, rightTop);
 motor intakeUpper = motor(PORT20, ratio6_1, true);
 motor intakeLower = motor(PORT19, ratio18_1, true); // 5.5W
 
+// Wall Stake Mech
+motor wallStake = motor(PORT15, ratio18_1, true);
+
 // Pneumatics
 digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.A);
 
 // Other Sensors
-gps GPS = gps(PORT6, 177.8); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the tower is slightly bent :(
+gps GPS = gps(PORT6, 175.1); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the support is slightly bent :(
 inertial Inertial = inertial(PORT1);
 
 

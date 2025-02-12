@@ -1,13 +1,13 @@
 #include "vex.h" // Include VEX headers
-#include <string> // Include string classß
+#include <string> // Include string class
 
 // General VEX brain button implementation
 class Button {
   private:
     // Define variables
-    int xpos, ypos, x2pos, y2pos;
-    std::string textString;
-    color vexButtonColor, vexTextColor;
+    int xpos, ypos, x2pos, y2pos; // Positions for the 2 corners of the button
+    std::string textString; // The string to be printed on the button
+    color vexButtonColor, vexTextColor; // The color of the button and the text
   public:
     // x, y, x2, and y2 are the coordinates for upper left and lower right corners of the button, respectively
     // text string goes roughly in the center of the button

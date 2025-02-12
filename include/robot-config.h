@@ -38,6 +38,9 @@ extern motor_group rightDrive;
 extern motor intakeUpper;
 extern motor intakeLower;
 
+// Wall Stake Motor
+extern motor wallStake;
+
 // Pneumatics
 extern digital_out clampPneumatic;
 
@@ -46,4 +49,4 @@ extern gps GPS;
 extern inertial Inertial;
 
 // Thou shalt have a void
-void  vexcodeInit( void );
+void vexcodeInit( void );
