@@ -48,5 +48,5 @@ extern digital_out clampPneumatic;
 extern gps GPS;
 extern inertial Inertial;
 
-// Thou shalt have a void
+// Initializer for robot configuration
 void vexcodeInit( void );

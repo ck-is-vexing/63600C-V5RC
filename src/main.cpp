@@ -13,16 +13,20 @@ competition Competition;
 
 // -------- GLOBAL VARIABLES --------
 
+const bool debugMode = true; // Toggle whether the program is in debug mode, which enables certain options for testing
+
 const bool gpsAllowed = true; // A toggle for whether the field has GPS strips or not
 int autonomousNumber; // A number used by the autonomous selector to indicate which autonomous for the robot to use
-int gpsBlueAngle = 90;
+int gpsBlueAngle = 90; // 90 degrees is the angle that correctly setup fields will have on the blue side
+int inertialAngle; // For when GPS is disabled, this number is set during the autonomous selector and applied to the inertial sensor during pre-auton
 
 const double xOffsetGPS = 2; // In inches
 const double yOffsetGPS = -5.5; // In inches
 
-PID headingPID = PID(0.6, 0, 28, 10, true);
+PID headingPID = PID(0.55, 0, 30, 10, true); // 0.6, 0, 28 initially
 PID fancyDrivePID = PID(1, 0, 0, 40); // 40ms because of gps update rate
 PID drivePID = PID(0.01, 0, 40, 10);
+
 
 // -------- SUPPORT FUNCTIONS --------
 
@@ -118,7 +122,10 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
       // Update angle
       currentAngle = Inertial.heading();
       double change = headingPID.update(desiredAngle, currentAngle);
-
+      
+      // Force the amount of change to be greater than the minimum speed, so that the robot actually makes it to the setpoint...
+      // This is more consistent than purely using the integral term, as it never affects the system except for at extremely low speed
+      // With just the integral, the tuning would only ever either make the robot overshoot or not do enough to actually matter
       if (std::abs(change) < minimumSpeed) {
         change = std::copysign(minimumSpeed, change);
       }
@@ -129,8 +136,8 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
 
       // Check for completion of the tick loop
       if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
-        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) || //Check for completion at a near 0 or 360 degree angle
-        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){ //Same as above
+        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) || // Check for completion at a near 0 or 360 degree angle
+        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){ // Same as above
 
         // Break the tick loop
         break;
@@ -151,17 +158,9 @@ void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed =
 
     // Check if desired angle was achieved
     if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
-        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) || //Check for completion at a near 0 or 360 degree angle
-        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){ //Same as above
+        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) || // Check for completion at a near 0 or 360 degree angle
+        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){ // Same as above
     
-      // Update controller screen to tell user the robot has finished the turn, along with debug information
-      //Controller1.Screen.clearScreen();
-      //Controller1.Screen.setCursor(1, 1);
-      //Controller1.Screen.print("Turn Complete!");
-      //Controller1.Screen.setCursor(2, 1);
-      //Controller1.Screen.print("Angle: ");
-      //Controller1.Screen.print(currentAngle);
-
       // Stop drivetrain
       leftDrive.stop(coast);
       rightDrive.stop(coast);
@@ -259,7 +258,7 @@ void driveTo(double desiredInches, directionType direction, double desiredAngle,
   headingPID.reset();
   drivePID.reset();
 
-  // Reset the drivetrain positions
+  // Reset the drivetrain sensor positions
   leftDrive.setPosition(0, deg);
   rightDrive.setPosition(0, deg);
 
@@ -430,6 +429,18 @@ void inertialGPSCalibrate(double averageSeconds = 1) {
 
 // Load interface to select autonomous program
 void autonSelector() {
+
+  // If debug mode is enabled, automatically set the angle and autonomous number
+  if (debugMode == true){
+    gpsBlueAngle -= 90;
+    autonomousNumber = 4;
+    Brain.Screen.clearScreen();
+    Brain.Screen.printAt(10, 20, "Skills Selected");
+
+    // Exit the function
+    return;
+  }
+
   // Initialize buttons
   Button redLeft = Button(10, 10, 110, 110, "Red Left", red, white);
   Button redRight = Button(120, 10, 220, 110, "Red Right", red, white);
@@ -459,39 +470,48 @@ void autonSelector() {
 
   // Safety to make sure the driver can run if an auton isn't selected
   int t = 0;
-
   
   // Repeatedly check for button press and notify user of what was pressed (in case of misclick)
   while (true){
     if (redLeft.isClicked() == true) {
       autonomousNumber = 0;
+      inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Red Left Selected");
       break;
+
     } else if (redRight.isClicked() == true) {
       autonomousNumber = 1;
+      inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Red Right Selected");
       break;
+
     } else if (blueLeft.isClicked() == true) {
       autonomousNumber = 2;
+      inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Blue Left Selected");
       break;
+
     } else if (blueRight.isClicked() == true) {
       autonomousNumber = 3;
+      inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Blue Right Selected");
       break;
+
     } else if (skills.isClicked() == true) {
       autonomousNumber = 4;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Skills Selected");
       break;
+
     } else if (noAuton.isClicked() == true) {
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Cancelled");
       break;
+
     } else if (decreaseAngle.isClicked() == true) {
       gpsBlueAngle -= 90;
       Brain.Screen.setPenColor(white);
@@ -499,6 +519,7 @@ void autonSelector() {
       Brain.Screen.setCursor(3, 39);
       Brain.Screen.print(gpsBlueAngle);
       wait(300, msec);
+
     } else if (increaseAngle.isClicked() == true) {
       gpsBlueAngle += 90;
       Brain.Screen.setPenColor(white);
@@ -522,6 +543,7 @@ void autonSelector() {
     wait(20, msec);
   }
 }
+
 
 // -------- AUTONOMOUS FUNCTIONS --------
 
@@ -900,11 +922,156 @@ void autonSkillsAutonNWS(){
 }
 
 // Autonomous skills with the wall stake (yippee!)
-// As of this code printout, has not been completed
 void autonSkillsAuton(){
 
+  // ************** FIRST CORNER **************
+  // Drive up to goal
+  leftDrive.spinFor(reverse, 500, deg, 20, velocityUnits::pct, false);
+  rightDrive.spinFor(reverse, 500, deg, 20, velocityUnits::pct);
+
+  // Clamp
+  clampPneumatic.set(true);
+
+  // Start intake
+  intakeLower.spin(fwd,100,pct);
+  intakeUpper.spin(fwd,100,pct);
+
+  // Wait a bit
+  wait(1000,msec);
+
+  // Spin to face first ring
+  turnTo(90, 1.5);
+
+  // Grab ring
+  leftDrive.spinFor(fwd, 1600, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1600, deg, 50, velocityUnits::pct);
+
+  // Spin to face second ring
+  turnTo(0, 2);
+
+  // Grab ring
+  leftDrive.spinFor(fwd, 1550, deg, 50, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 1550, deg, 50, velocityUnits::pct);
+
+  // Spin to third and fourth rings
+  turnTo(270, 1.5);
+
+  // Grab rings
+  leftDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct);
+
+  // Spin to face final ring
+  turnTo(48, 2);
+
+  // Pick up ring
+  leftDrive.spinFor(fwd, 800, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 800, deg, 30, velocityUnits::pct);
+
+  wait(1,sec);
+
+  turnTo(110, 2);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+
+  // Reverse goal into corner
+  drive(reverse, 8, 20);
+
+  // Let go
+  clampPneumatic.set(false);
+  intakeLower.spin(reverse,100,pct);
+  intakeUpper.spin(reverse,100,pct);
+
+  wait(400,msec);
+
+  drive(fwd, 7, 20);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+
+  turnTo(0.5,0.3);
+
+  drive(reverse, 69, 40);
+
+  drive(reverse, 9, 20);
+
+  // Clamp
+  clampPneumatic.set(true);
+
+  drive(reverse, 5, 20);
+
+  wait(100, msec);
+
+  // ************** SECOND CORNER **************
+  
+  // Spin to face first ring
+  turnTo(90, 1);
+
+  // Start intake
+  intakeLower.spin(fwd,100,pct);
+  intakeUpper.spin(fwd,100,pct);
+
+  // Grab ring
+  drive(fwd, 32, 30);
+
+  // Face second ring
+  turnTo(155, 1);
+
+  drive(fwd, 40);
+
+  drive(reverse, 4);
+
+  // Spin to face third ring
+  turnTo(285, 2);
+
+  // Grab ring
+  drive(fwd, 23);
+
+  // Spin to fourth and fifth rings
+  turnTo(270, 1);
+
+  // Grab rings
+  leftDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct, false);
+  rightDrive.spinFor(fwd, 2000, deg, 30, velocityUnits::pct);
+
+  wait(0.5,sec);
+
+  // Spin to face final ring
+  turnTo(135, 2);
+
+  // Pick up ring
+  drive(fwd, 20);
+
+  wait(1,sec);
+
+  turnTo(75, 2);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+
+  // Reverse goal into corner
+  drive(reverse, 12, 22);
+
+  // Let go
+  clampPneumatic.set(false);
+  intakeLower.spin(reverse,100,pct);
+  intakeUpper.spin(reverse,100,pct);
+
+  wait(400,msec);
+
+  drive(fwd, 5, 20);
+
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
+
+  
+  // ************** SECOND HALF **************
+
+  turnTo(0, 2);
+  drive(fwd, 15);
+
   // zoop under the bar!
-  turnTo(45, 1);
+  turnTo(45, 0.8);
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
   intakeLower.spin(fwd,100,pct);
@@ -934,17 +1101,11 @@ void autonSkillsAuton(){
   intakeUpper.spin(fwd,100,pct);
   drive(fwd, 35);
 
-  // Spin to face fourth ring
-  turnTo(180, 2);
+  // Spin to fourth ring
+  turnTo(135, 1.5);
 
   // Grab ring
-  drive(fwd, 24);
-
-  // Spin to fifth ring
-  turnTo(90, 1.5);
-
-  // Grab ring
-  drive(fwd, 24);
+  drive(fwd, 31);
 
   // Spin to face final ring
   turnTo(180, 2);
@@ -981,13 +1142,18 @@ void autonSkillsAuton(){
   // Push final goal into corner
   turnTo(15,2);
   intakeLower.spin(fwd,30,pct);
-  drive(fwd, 144, 65);
+  drive(fwd, 132, 100);
+  intakeLower.spin(reverse,100,pct);
 
-  turnTo(45, 5);
-  drive(fwd, 30, 100);
+  wait(200, msec);
 
-  drive(reverse, 20, 100);
+  //turnTo(45, 5);
+  //drive(fwd, 30, 100);
+
+  drive(reverse, 50, 100);
+  intakeLower.stop(coast);
 }
+
 
 // -------- GAME FUNCTIONS --------
 
@@ -1008,18 +1174,15 @@ void pre_auton(void) {
 
     // Calibrate the inertial sensor with the custom calibration function over a 0.5 second averaging time
     inertialGPSCalibrate(0.5);
-  
+
   } else {
 
-    // If the robot doesn't have access to GPS strips, assume that it was set up facing 0 degrees
-    // This needs to be improved, possibly using a heading set during the autonSelector so that it is consistent
-    Inertial.setHeading(0, deg);
+    // If the robot doesn't have access to GPS strips, set the angle manually
+    Inertial.setHeading(inertialAngle, deg);
 
     // Loop until the inertial sensor finishes calibrating.
     while(Inertial.isCalibrating()){
-
-      // Wait to prevent wasted resources by iterating too fast
-      wait(40,msec);
+      wait(40,msec); // Wait to prevent wasted resources by iterating too fast
     }
 
     // Let the driver know that calibration is complete
@@ -1027,14 +1190,14 @@ void pre_auton(void) {
     Controller1.Screen.print("Inertial Calibrated!");
   }
 
-  // Set Wall stake mech to brake
+  // Set Wall stake mechanism motor to brake
   wallStake.setStopping(brake);
 
-  // Set the intake to run at 100%
+  // Set the intake to run at 100% speed
   intakeLower.setVelocity(100, pct);
   intakeUpper.setVelocity(100, pct);
 
-  // Make sure the clamp js not engaged
+  // Make sure the clamp is not engaged
   clampPneumatic.set(false);
 
   // Initialize Robot Configuration
@@ -1091,9 +1254,8 @@ void usercontrol(void) {
   // Main loop for driver control code
   while (true == true /*a statement that is true*/) { 
 
-    // Manual autonomous trigger used for testing, should be commented out for competition
-    /*
-    if (Controller1.ButtonX.pressing()){
+    // Manual autonomous trigger used for testing
+    if (Controller1.ButtonX.pressing() && debugMode == true){
 
       leftDrive.setStopping(brake);
       rightDrive.setStopping(brake);
@@ -1125,9 +1287,9 @@ void usercontrol(void) {
       rightDrive.spin(fwd);
       wallStake.spin(fwd); 
     }
-    */
     
-    //renderRobot(); // Render the robot on the brain screen, useful for debugging, not needed in competition
+    
+    //renderRobot(); // Render the robot on the brain screen, useful for testing, not needed in competition
     checkInputs(); // Call checkInputs, which checks buttons and joysticks on the controller and responds accordingly
     wait(20, msec); // Sleep the program for a short amount of time to prevent wasted resources
   }

@@ -36,13 +36,13 @@ class PID {
       }
 
       // Update integral
-      // The integral calculates the area in between the graph of pv and the x-axis
+      // The integral calculates the area in between the graph of pv and the t-axis (x-axis)
       // To calculate integral, every tick the new area is added to the total sum
       integral += error * dT;
 
       // Update Derivative (approximation)
       // Because the code only executes so often, the equation essentially is (y2 - y1) / (x2 - x1)
-      // The y values are the current error, and the previous error
+      // The y values are the current error and the previous error
       // Because the change is always one tick, the denominator only has to be the length of one tick
       derivative = (error - oldError) / dT;
 
