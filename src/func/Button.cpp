@@ -1,4 +1,4 @@
-#include "vex.h" // Include VEX headers
+#include "robot-config.h" // Include VEX headers
 #include <string> // Include string class
 
 // General VEX brain button implementation

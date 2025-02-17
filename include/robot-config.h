@@ -1,27 +1,12 @@
+#ifndef ROBOT_CONFIG_H
+#define ROBOT_CONFIG_H
+
+#include "vex.h"
+#include "control/drivebase.h"
 using namespace vex;
 
 extern brain Brain;
 extern controller Controller1;
-
-
-/* Swerve:
-
-// Drivetrain motors
-extern motor swerveFrontLeft1;
-extern motor swerveFrontLeft2;
-extern motor swerveFrontRight1;
-extern motor swerveFrontRight2;
-extern motor swerveBackRight1;
-extern motor swerveBackRight2;
-extern motor swerveBackLeft1;
-extern motor swerveBackLeft2;
-
-// Drivetrain sensors
-extern rotation fL;
-extern rotation fR;
-extern rotation bR;
-extern rotation bL;
-*/
 
 // Drivetrain motors
 extern motor leftBack;
@@ -33,6 +18,7 @@ extern motor rightBack;
 extern motor rightFront;
 extern motor rightTop;
 extern motor_group rightDrive;
+
 
 // Intake motors
 extern motor intakeUpper;
@@ -48,5 +34,13 @@ extern digital_out clampPneumatic;
 extern gps GPS;
 extern inertial Inertial;
 
+// Drivetrain
+extern drivebase bot;
+
+// Callback to stop intake
+void stopIntake( void *arg );
+
 // Initializer for robot configuration
 void vexcodeInit( void );
+
+#endif

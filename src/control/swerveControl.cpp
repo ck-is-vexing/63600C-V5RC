@@ -1,5 +1,5 @@
-#include "vex.h" // Include the vex headers
-#include "PID.cpp" // Include pid class
+#include "robot-config.h" // Include the vex headers
+#include "func/PID.h" // Include pid class
 using namespace vex; // Set the namespace to vex
 
 class SwerveWheel {

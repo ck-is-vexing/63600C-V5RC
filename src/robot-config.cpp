@@ -1,37 +1,11 @@
-#include "vex.h"
-//#include "func/swerveControl.cpp" // Drivetrain control
-
-
+#include "robot-config.h"
 using namespace vex;
-//using signature = vision::signature;
-//using code = vision::code;
 
 // Here, have a brain!
 brain Brain;
 
 // Controller
 controller Controller1 = controller(primary);
-
-/* Swerve
-// Drivetrain motors
-motor swerveFrontLeft1 = motor(PORT1, ratio18_1);
-motor swerveFrontLeft2 = motor(PORT2, ratio18_1, true);
-motor swerveFrontRight1 = motor(PORT3, ratio18_1);
-motor swerveFrontRight2 = motor(PORT4, ratio18_1, true);
-motor swerveBackLeft1 = motor(PORT5, ratio18_1);
-motor swerveBackLeft2 = motor(PORT6, ratio18_1, true);
-motor swerveBackRight1 = motor(PORT7, ratio18_1);
-motor swerveBackRight2 = motor(PORT8, ratio18_1, true);
-
-// Drivetrain sensors
-rotation fL = rotation(PORT9);
-rotation fR = rotation(PORT10);
-rotation bR = rotation(PORT11);
-rotation bL = rotation(PORT12);
-
-// Initiate drivetrain
-SwerveDrivetrain Drivetrain(swerveFrontLeft1,swerveFrontLeft2,swerveFrontRight1,swerveFrontRight2,swerveBackRight1,swerveBackRight2,swerveBackLeft1,swerveBackLeft2,fL,fR,bR,bL);
-*/
 
 // Drivetrain motors
 motor leftBack = motor(PORT4, ratio6_1, true);
@@ -58,8 +32,13 @@ digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.H);
 gps GPS = gps(PORT14, 175.1); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the support is slightly bent :(
 inertial Inertial = inertial(PORT13);
 
+// Drivetrain init
+drivebase bot = drivebase(leftDrive, rightDrive, Brain, Inertial, GPS);
 
-void vexcodeInit( void ) {
-  // sí
-  // ...
+// Callback to stop intake
+void stopIntake( void *arg ) {
+  intakeLower.stop(coast);
+  intakeUpper.stop(coast);
 }
+
+void vexcodeInit( void ) {}

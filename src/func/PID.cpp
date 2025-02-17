@@ -1,61 +1,43 @@
-#include "vex.h" // Include VEX headers
+#include "vex.h"
+#include "func/PID.h"
 
-// Contains a general PID implementation to be used for more specific applications
-// Read the turnTo function in main.cpp for an application of this class
-class PID {
-  private:
-    double Kp; // Proportional Tuning
-    double Ki; // Integral Tuning
-    double Kd; // Derivative Tuning
-    double integral = 0; // Current integral value
-    double derivative; // Current derivative value
-    int dT; // The change in time, in ms, of every tick
-    bool rF; // Toggle for the rotational error fix
-  public:
-    double oldError; // The previous error, used for calculating Integral
+// Assign Values
+PID::PID(double KProportional, double KIntegral, double KDerivative, int deltaTime, bool rotationFix)
+: Kp(KProportional), Ki(KIntegral), Kd(KDerivative), dT(deltaTime), rF(rotationFix) {}
 
-    // Proportional, integral, and derivative tuning respectively
-    // deltaTime should be the change in time, in ms, between ticks
-    PID(double KProportional, double KIntegral, double KDerivative, int deltaTime, bool rotationFix = false)
-    : Kp(KProportional), Ki(KIntegral), Kd(KDerivative), dT(deltaTime), rF(rotationFix) {}
+// Update the PID controller and return the value to be applied to the mechanical system
+double PID::update(double setpoint, double pv){ 
 
-    // Returns the PID value for one tick
-    // setpoint is the desired value for the variable to approach
-    // pv is the process variable
-    double update(double setpoint, double pv){ 
+  // Update error
+  // Error is the difference between what is desired and what the current value is
+  double error = setpoint - pv;
 
-      // Update error
-      // It's the difference between what is desired and what the current value is.
-      double error = setpoint - pv;
+  // Apply rotationFix
+  if (error > 180 && rF == true){
+    error -= 360;
+  } else if (error < -180 && rF == true){
+    error += 360;
+  }
 
-      // If rotationFix is enabled, this code makes it so the error is facing the correct direction
-      if (error > 180 && rF == true){
-        error -= 360;
-      } else if (error < -180 && rF == true){
-        error += 360;
-      }
+  // Update integral
+  // The integral calculates the area in between the graph of pv and the t-axis (x-axis)
+  // To calculate integral, every tick the new area is added to the total sum
+  integral += error * dT;
 
-      // Update integral
-      // The integral calculates the area in between the graph of pv and the t-axis (x-axis)
-      // To calculate integral, every tick the new area is added to the total sum
-      integral += error * dT;
+  // Update Derivative (approximation)
+  // Because the code only executes so often, the equation essentially is (y2 - y1) / (x2 - x1)
+  // The y values are the current error and the previous error
+  // Because the change is always one tick, the denominator only has to be the length of one tick
+  derivative = (error - oldError) / dT;
 
-      // Update Derivative (approximation)
-      // Because the code only executes so often, the equation essentially is (y2 - y1) / (x2 - x1)
-      // The y values are the current error and the previous error
-      // Because the change is always one tick, the denominator only has to be the length of one tick
-      derivative = (error - oldError) / dT;
+  // Update old error
+  oldError = error;
 
-      // Update old error
-      oldError = error;
+  // Calculate the return value
+  return (Kp * error) + (Ki * integral) + (Kd * derivative);
+}
 
-      // Calculate the return value
-      return (Kp * error) + (Ki * integral) + (Kd * derivative);
-    }
-
-    // Resets variables
-    // Use when the setpoint changes
-    void reset(){
-      integral = 0;
-    }
-};
+// Resets values of the PID, to be used when the setpoint changes
+void PID::reset(){
+  integral = 0;
+}

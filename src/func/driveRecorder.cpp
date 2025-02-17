@@ -1,6 +1,6 @@
 // This file contains functions that allow for all the inputs and current angle of the robot in a driver skills run to be recorded and then replayed in real-time
 
-#include "vex.h"
+#include "robot-config.h"
 #include <fstream>
 using namespace vex; // Set the namespace to vex
 

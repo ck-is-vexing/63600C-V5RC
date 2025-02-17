@@ -33,7 +33,7 @@
 			"compilerPath": "${vex_compilerPath}",
 			"cStandard": "gnu99",
 			"cppStandard": "gnu++11",
-			"intelliSenseMode": "macos-clang-x86"
+			"intelliSenseMode": "macos-clang-arm64"
 		},
 		{
 			"name": "Linux",
