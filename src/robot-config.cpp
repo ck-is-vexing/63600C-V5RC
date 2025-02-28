@@ -23,17 +23,21 @@ motor intakeUpper = motor(PORT12, ratio6_1, true);
 motor intakeLower = motor(PORT7, ratio18_1, true); // 5.5W
 
 // Wall Stake Mech
-motor wallStake = motor(PORT11, ratio18_1, true);
+motor wallStakeMot = motor(PORT11, ratio18_1, true);
 
 // Pneumatics
 digital_out clampPneumatic = digital_out(Brain.ThreeWirePort.H);
 
-// Other Sensors
-gps GPS = gps(PORT14, 175.1); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the support is slightly bent :(
+// Other Sensors 175.1
+gps GPS = gps(PORT15, 178.2); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the support is slightly bent :(
 inertial Inertial = inertial(PORT13);
+rotation wallStakeRot = rotation(PORT21, true);
 
 // Drivetrain init
 drivebase bot = drivebase(leftDrive, rightDrive, Brain, Inertial, GPS);
+
+// wall stake init
+wallStake ws = wallStake(wallStakeMot, wallStakeRot);
 
 // Callback to stop intake
 void stopIntake( void *arg ) {

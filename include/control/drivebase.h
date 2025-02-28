@@ -3,6 +3,7 @@
 
 #include "func/PID.h"
 
+// TODO: add comments
 /**
  * @class drivebase
  * @brief Rewrite later
@@ -34,11 +35,11 @@ class drivebase {
      */
     drivebase(vex::motor_group& leftDrivetrain, vex::motor_group& rightDrivetrain, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor);
 
-    void drive(vex::directionType direction, double inches, int velocityPercent = 30);
+    void drive(vex::directionType direction, double inches, int velocityPercent = 60);
 
-    void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5, double minimumSpeed = 1);
+    void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5, double minimumSpeed = 1.8);
 
-    void driveTo(double desiredInches, vex::directionType direction, double desiredAngle, double precision = 0.5, double secondsAllowed = 10, int recursions = 5);
+    void driveTo(vex::directionType direction, double desiredInches, double desiredAngle, double precision = 0.1, double secondsAllowed = 10, int recursions = 5, double minSpeed = 1.0);
 
     void posDriveTo(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 10, int recursions = 5);
 
@@ -47,6 +48,8 @@ class drivebase {
     double get_y();
 
     void renderRobot();
+
+    void demoTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2000, int recursions = 5, double minimumSpeed = 0);
 };
 
 #endif

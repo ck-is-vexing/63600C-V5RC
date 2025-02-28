@@ -8,7 +8,7 @@ drivebase::drivebase(vex::motor_group& leftDrivetrain, vex::motor_group& rightDr
 : ld(leftDrivetrain), rd(rightDrivetrain), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
   headingPID(0.55, 0, 30, 10, true), // 0.6, 0, 28 initially
   fancyDrivePID(1, 0, 0, 40), // 40ms because of gps update rate
-  drivePID(0.01, 0, 40, 10),
+  drivePID(0.8, 0, 0, 10),
   xOffsetGPS(2), // In inches
   yOffsetGPS(-5.5) {} // In inches
 
@@ -70,7 +70,7 @@ void drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
     rd.stop(brake);
 
     // Wait a little bit in case the system is still in motion
-    wait(300,msec);
+    wait(200,msec);
 
     // Update currentAngle
     currentAngle = inert.heading();
@@ -94,7 +94,7 @@ void drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
 // PID enabled drive function without GPS
 // Takes an angle and a distance
 // Has issues due to motor angle data not being precise enough--should be switched to tracking wheels
-void drivebase::driveTo(double desiredInches, vex::directionType direction, double desiredAngle, double precision, double secondsAllowed, int recursions) {
+void drivebase::driveTo(vex::directionType direction, double desiredInches, double desiredAngle, double precision, double secondsAllowed, int recursions, double minSpeed) {
 
   // Reset the PIDs
   headingPID.reset();
@@ -118,21 +118,27 @@ void drivebase::driveTo(double desiredInches, vex::directionType direction, doub
 
       // Update angle
       currentAngle = inert.heading();
-      double change = headingPID.update(desiredAngle, currentAngle);
+      double angleChange = headingPID.update(desiredAngle, currentAngle);
 
       // Update distance
       // Distance is achieved without using the GPS by taking the integral of the derivative of motor position and converting to inches
       // Future optimizations include removing calculating the derivative by just taking the motor.velocity() directly
       currentDeg = (ld.position(degrees) + rd.position(degrees)) / 2;
       currentDistance += (currentDeg - oldDeg) * (0.0170169602069);
+      //currentDistance += (ld.velocity(velocityUnits::dps) + rd.velocity(velocityUnits::dps)) / 2 * (0.0170169602069);
       oldDeg = currentDeg;
-      std::cout << currentDistance << std::endl;
-
-      change += drivePID.update(desiredInches, currentDistance);
+      
+      double driveChange = drivePID.update(desiredInches, currentDistance);
+      
+      if (std::abs(driveChange) < minSpeed) {
+        driveChange = std::copysign(minSpeed, driveChange);
+      }
+      
+      std::cout << angleChange << "          " << driveChange << "            " << std::copysign(angleChange, currentDistance) + driveChange << std::endl;
 
       // Spin drivetrain
-      ld.spin(direction,change,pct);
-      rd.spin(direction,change,pct);
+      ld.spin(fwd,angleChange + driveChange,pct);
+      rd.spin(fwd,-angleChange + driveChange,pct);
 
       // Check for completion of the tick loop
       if (currentDistance < (desiredInches + precision) && currentDistance > (desiredInches - precision)){ //Same as above
@@ -149,7 +155,7 @@ void drivebase::driveTo(double desiredInches, vex::directionType direction, doub
     rd.stop(brake);
 
     // Wait a little bit in case the system is still in motion
-    wait(300,msec);
+    wait(200,msec);
 
     // Update currentAngle
     currentAngle = inert.heading();
@@ -307,4 +313,49 @@ void drivebase::renderRobot() {
   br.Screen.setCursor(6, 30);
   br.Screen.print("Y: ");
   br.Screen.print(y_gps);
+}
+
+void drivebase::demoTo(double desiredAngle, double precision, double secondsAllowed, int recursions, double minimumSpeed) {
+
+  // Reset the PID
+  headingPID.reset();
+
+  // vars
+  double currentAngle;
+
+  // Loop of recursions
+  for (int i = 0; i < recursions; i++){
+
+    // Loop of ticks, converting seconds allowed into sets of 10 ms
+    for (int t = 0; t < (secondsAllowed * 100); t++){
+
+      // Update angle
+      currentAngle = inert.heading();
+      double change = headingPID.update(desiredAngle, currentAngle);
+      
+      // Force the amount of change to be greater than the minimum speed, so that the robot actually makes it to the setpoint...
+      // This is more consistent than purely using the integral term, as it never affects the system except for at extremely low speed
+      // With just the integral, the tuning would only ever either make the robot overshoot or not do enough to actually matter
+      if (std::abs(change) < minimumSpeed) {
+        change = std::copysign(minimumSpeed, change);
+      }
+
+      // Spin drivetrain
+      ld.spin(fwd,change,pct);
+      rd.spin(reverse,change,pct);
+
+      // Prevent wasted resources by waiting a short period of time before iterating
+      wait(10,msec); 
+    }
+
+    ld.stop(brake);
+    rd.stop(brake);
+
+    // Wait a little bit in case the system is still in motion
+    wait(200,msec);
+
+    // Update currentAngle
+    currentAngle = inert.heading();
+    // If the correct angle was not achieved, the code will recurse
+  }
 }

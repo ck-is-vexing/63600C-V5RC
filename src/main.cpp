@@ -1,20 +1,21 @@
-// TODO: organize the remaining non-game functions into separate files as well as main vars
+// TODO: move setup functions out of main
 
 // -------- SETUP --------
 
 #include "robot-config.h" // Include robot configuration
 #include "globals.h" // Include global variables
 #include "auton/autonomous.h" // Include autonomous namespace
-#include "func/button.cpp" // Include Button class, used for autonSelector
+#include "func/button.h" // Include Button class, used for autonSelector
+#include <iostream>
 
 using namespace vex; // Set the namespace to vex
 
 // New competition instance
 competition Competition;
 
-int autonomousNumber; // A number used by the autonomous selector to indicate which autonomous for the robot to use
+int autonomousNumber; // A number used to indicate which autonomous for the robot to use
 int gpsBlueAngle = 90; // 90 degrees is the angle that correctly setup fields will have on the blue side
-int inertialAngle; // For when GPS is disabled, this number is set during the autonomous selector and applied to the inertial sensor during pre-auton
+int inertialAngle = 0; // For when GPS is disabled, this number is set during the autonomous selector and applied to the inertial sensor during pre-auton
 
 
 // -------- SUPPORT FUNCTIONS --------
@@ -31,10 +32,10 @@ void checkInputs() {
   if (Controller1.ButtonR1.pressing()) {
     intakeLower.spin(fwd,100,pct);
     intakeUpper.spin(fwd,100,pct);
-  } else if (Controller1.ButtonA.pressing()) {
+  } else if (Controller1.ButtonR2.pressing()) {
     intakeLower.spin(reverse,30,pct);
     intakeUpper.spin(reverse,30,pct);
-  } else if (Controller1.ButtonR2.pressing()) {
+  } else if (Controller1.ButtonA.pressing()) {
     intakeLower.spin(fwd,100,pct);
     intakeUpper.spin(fwd,50,pct);
   } else {
@@ -44,13 +45,21 @@ void checkInputs() {
 
   // Wall stake mech
   if (Controller1.ButtonDown.pressing()) {
-    wallStake.setVelocity(100, pct);
+    ws.cancel();
+    wallStakeMot.setVelocity(100, pct);
   } else if (Controller1.ButtonB.pressing()) {
-    wallStake.setVelocity(-100, pct);
+    ws.cancel();
+    wallStakeMot.setVelocity(-100, pct);
+  } else if (Controller1.ButtonRight.pressing()) {
+    ws.setAngle(13);
   } else {
-    wallStake.setVelocity(0, pct);
+    if (ws.running == true) {
+      ws.tick();
+    } else {
+      wallStakeMot.setVelocity(0, pct);
+    }
   }
-  
+
   // Clamp control
   if (Controller1.ButtonL2.pressing()) {
     clampPneumatic.set(false);
@@ -111,27 +120,28 @@ void inertialGPSCalibrate(double averageSeconds = 1) {
 
 // Load interface to select autonomous program
 void autonSelector() {
-
+  
   // If debug mode is enabled, automatically set the angle and autonomous number
+  /*
   if (global::debugMode == true){
-    gpsBlueAngle -= 90;
+    //gpsBlueAngle += 180;
     autonomousNumber = 4;
     Brain.Screen.clearScreen();
     Brain.Screen.printAt(10, 20, "Skills Selected");
 
     // Exit the function
     return;
-  }
+  }*/
 
   // Initialize buttons
-  Button redLeft = Button(10, 10, 110, 110, "Red Left", red, white);
-  Button redRight = Button(120, 10, 220, 110, "Red Right", red, white);
-  Button blueLeft = Button(10, 120, 110, 220, "Blue Left", blue, white);
-  Button blueRight = Button(120, 120, 220, 220, "Blue Right", blue, white);
-  Button skills = Button(230, 120, 330, 220, "Skills (Red Left)", orange, white);
-  Button noAuton = Button(230, 10, 330, 110, "No Auton", orange, white);
-  Button decreaseAngle = Button(340, 120, 400, 180, "<", green, white);
-  Button increaseAngle = Button(410, 120, 470, 180, ">", green, white);
+  Button redLeft = Button(10, 10, 110, 110, "Red Left", red, white, Brain);
+  Button redRight = Button(120, 10, 220, 110, "Red Right", red, white, Brain);
+  Button blueLeft = Button(10, 120, 110, 220, "Blue Left", blue, white, Brain);
+  Button blueRight = Button(120, 120, 220, 220, "Blue Right", blue, white, Brain);
+  Button skills = Button(230, 120, 330, 220, "Skills (Red Left)", orange, white, Brain);
+  Button noAuton = Button(230, 10, 330, 110, "No Auton", orange, white, Brain);
+  Button decreaseAngle = Button(340, 120, 400, 180, "<", green, white, Brain);
+  Button increaseAngle = Button(410, 120, 470, 180, ">", green, white, Brain);
 
   // Clear screen and render buttons
   Brain.Screen.clearScreen();
@@ -231,7 +241,8 @@ void autonSelector() {
 
 // Setup code ran before the competition starts
 void pre_auton(void) {
-  
+  std::cout << "Pre-Auton Init" << std::endl;
+
   // Display the autonomous selector on the brain screen
   autonSelector();
 
@@ -260,10 +271,12 @@ void pre_auton(void) {
     // Let the driver know that calibration is complete
     Controller1.Screen.setCursor(3, 1);
     Controller1.Screen.print("Inertial Calibrated!");
+
+    //bot.demoTo(0);
   }
 
   // Set Wall stake mechanism motor to brake
-  wallStake.setStopping(brake);
+  wallStakeMot.setStopping(brake);
 
   // Set the intake to run at 100% speed
   intakeLower.setVelocity(100, pct);
@@ -278,7 +291,8 @@ void pre_auton(void) {
 
 // Function run during the autonomous period
 void autonomous(void) {
-
+  std::cout << "Auton Init" << std::endl;
+  
   // Temporarily set stopping to brake
   leftDrive.setStopping(brake);
   rightDrive.setStopping(brake);
@@ -317,24 +331,26 @@ void autonomous(void) {
 
 // Code run during the driver control period
 void usercontrol(void) {
+  std::cout << "Driver Init" << std::endl;
 
   // If the intake wasn't stopped previously, stop it now (just in case)
   intakeLower.stop(coast);
   intakeUpper.stop(coast);
   
   // Prime the drivetrain motors
-  leftDrive.spin(fwd);
-  rightDrive.spin(fwd);
+  leftDrive.spin(fwd, 0, pct);
+  rightDrive.spin(fwd, 0, pct);
 
   // Prime wall stake mech
-  wallStake.spin(fwd);
-
+  wallStakeMot.spin(fwd, 0, pct);
   // Main loop for driver control code
   while (true == true /* A statement that is true */) { 
-
+    
     // Manual autonomous trigger used for testing
     if (Controller1.ButtonX.pressing() && global::debugMode == true){
 
+      //bot.driveTo(fwd, 24, 0);
+      
       leftDrive.setStopping(brake);
       rightDrive.setStopping(brake);
 
@@ -369,9 +385,9 @@ void usercontrol(void) {
       rightDrive.setStopping(coast);
       leftDrive.spin(fwd);
       rightDrive.spin(fwd);
-      wallStake.spin(fwd); 
+      wallStakeMot.spin(fwd); 
+      
     }
-    
     
     //renderRobot(); // Render the robot on the brain screen, useful for testing, not needed in competition
     checkInputs(); // Call checkInputs, which checks buttons and joysticks on the controller and responds accordingly

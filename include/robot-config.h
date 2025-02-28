@@ -3,6 +3,7 @@
 
 #include "vex.h"
 #include "control/drivebase.h"
+#include "control/scoringMech.h"
 using namespace vex;
 
 extern brain Brain;
@@ -25,7 +26,7 @@ extern motor intakeUpper;
 extern motor intakeLower;
 
 // Wall Stake Motor
-extern motor wallStake;
+extern motor wallStakeMot;
 
 // Pneumatics
 extern digital_out clampPneumatic;
@@ -33,9 +34,13 @@ extern digital_out clampPneumatic;
 // Other Sensors
 extern gps GPS;
 extern inertial Inertial;
+extern rotation wallStakeRot;
 
 // Drivetrain
 extern drivebase bot;
+
+// Wall stake
+extern wallStake ws;
 
 // Callback to stop intake
 void stopIntake( void *arg );
