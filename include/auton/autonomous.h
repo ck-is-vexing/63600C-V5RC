@@ -18,10 +18,6 @@ namespace auton {
 
   void skills();
 
-  void skillsNDT();
-
-  void skillsNWS();
-
   void PIDTest();
 }
 
