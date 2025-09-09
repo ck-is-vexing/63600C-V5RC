@@ -13,7 +13,17 @@ using namespace vex; // Set the namespace to vex
 // New competition instance
 competition Competition;
 
-int autonomousNumber; // A number used to indicate which autonomous for the robot to use
+enum autonomousTypes { // Enum for autonomous types
+  NONE,
+  SKILLS,
+  RED_LEFT,
+  RED_RIGHT,
+  BLUE_LEFT,
+  BLUE_RIGHT
+};
+
+enum autonomousTypes autonSelection; // Instance for selecting auton
+
 int gpsBlueAngle = 90; // 90 degrees is the angle that correctly setup fields will have on the blue side
 int inertialAngle = 0; // For when GPS is disabled, this number is set during the autonomous selector and applied to the inertial sensor during pre-auton
 
@@ -25,8 +35,8 @@ int inertialAngle = 0; // For when GPS is disabled, this number is set during th
 void checkInputs() {
 
   // Set the drivetrain motor groups to move based on tank drive principles
-  leftDrive.setVelocity(Controller1.Axis3.value(), pct);
-  rightDrive.setVelocity(Controller1.Axis2.value(), pct);
+  leftDrive.setVelocity(leftJoystick.getValue(), pct);
+  rightDrive.setVelocity(rightJoystick.getValue(), pct);
 
   // Intake control
   if (Controller1.ButtonR1.pressing()) {
@@ -43,28 +53,11 @@ void checkInputs() {
     intakeUpper.stop(coast);
   }
 
-  // Wall stake mech
-  if (Controller1.ButtonDown.pressing()) {
-    ws.cancel();
-    wallStakeMot.setVelocity(100, pct);
-  } else if (Controller1.ButtonB.pressing()) {
-    ws.cancel();
-    wallStakeMot.setVelocity(-100, pct);
-  } else if (Controller1.ButtonRight.pressing()) {
-    ws.setAngle(13);
-  } else {
-    if (ws.running == true) {
-      ws.tick();
-    } else {
-      wallStakeMot.setVelocity(0, pct);
-    }
-  }
-
   // Clamp control
   if (Controller1.ButtonL2.pressing()) {
-    clampPneumatic.set(false);
+    intakePneumatic.set(false);
   } else if (Controller1.ButtonL1.pressing()) {
-    clampPneumatic.set(true);
+    intakePneumatic.set(true);
   }
 }
 
@@ -125,7 +118,7 @@ void autonSelector() {
   /*
   if (global::debugMode == true){
     //gpsBlueAngle += 180;
-    autonomousNumber = 4;
+    autonomousSwitch = 4;
     Brain.Screen.clearScreen();
     Brain.Screen.printAt(10, 20, "Skills Selected");
 
@@ -166,40 +159,41 @@ void autonSelector() {
   // Repeatedly check for button press and notify user of what was pressed (in case of misclick)
   while (true){
     if (redLeft.isClicked() == true) {
-      autonomousNumber = 0;
+      autonSelection = RED_LEFT;
       inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Red Left Selected");
       break;
 
     } else if (redRight.isClicked() == true) {
-      autonomousNumber = 1;
+      autonSelection = RED_RIGHT;
       inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Red Right Selected");
       break;
 
     } else if (blueLeft.isClicked() == true) {
-      autonomousNumber = 2;
+      autonSelection = BLUE_LEFT;
       inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Blue Left Selected");
       break;
 
     } else if (blueRight.isClicked() == true) {
-      autonomousNumber = 3;
+      autonSelection = BLUE_RIGHT;
       inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Blue Right Selected");
       break;
 
     } else if (skills.isClicked() == true) {
-      autonomousNumber = 4;
+      autonSelection = SKILLS;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Skills Selected");
       break;
 
     } else if (noAuton.isClicked() == true) {
+      autonSelection = NONE;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Cancelled");
       break;
@@ -223,6 +217,7 @@ void autonSelector() {
 
     // Quits if the loop has been running more than 30 seconds
     if (t > 1500) {
+      autonSelection = NONE;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Aborted!");
       break;
@@ -275,15 +270,12 @@ void pre_auton(void) {
     //bot.demoTo(0);
   }
 
-  // Set Wall stake mechanism motor to brake
-  wallStakeMot.setStopping(brake);
-
   // Set the intake to run at 100% speed
   intakeLower.setVelocity(100, pct);
   intakeUpper.setVelocity(100, pct);
 
   // Make sure the clamp is not engaged
-  clampPneumatic.set(false);
+  intakePneumatic.set(false);
 
   // Initialize Robot Configuration
   vexcodeInit();
@@ -297,30 +289,24 @@ void autonomous(void) {
   leftDrive.setStopping(brake);
   rightDrive.setStopping(brake);
 
-  // Doesn't run if it is skills or something else
-  if (autonomousNumber < 4){
-
-    // Schedule the intake to stop just before the end of the autonomous period
-    // Rings occasionally get stuck and take longer than usual, this is just a precaution
-    timer().event(stopIntake, 14800);
-  }
-
   // Run the autonomous that was selected during the pre-auton phase
-  switch (autonomousNumber) {
-    case 0:
+  switch (autonSelection) {
+    case RED_LEFT:
       auton::redLeft();
       break;
-    case 1:
+    case RED_RIGHT:
       auton::redRight();
       break;
-    case 2:
+    case BLUE_LEFT:
       auton::blueLeft();
       break;
-    case 3:
+    case BLUE_RIGHT:
       auton::blueRight();
       break;
-    case 4:
+    case SKILLS:
       auton::skills();
+      break;
+    case NONE:
       break;
   }
 
@@ -341,8 +327,6 @@ void usercontrol(void) {
   leftDrive.spin(fwd, 0, pct);
   rightDrive.spin(fwd, 0, pct);
 
-  // Prime wall stake mech
-  wallStakeMot.spin(fwd, 0, pct);
   // Main loop for driver control code
   while (true == true /* A statement that is true */) { 
     
@@ -354,38 +338,32 @@ void usercontrol(void) {
       leftDrive.setStopping(brake);
       rightDrive.setStopping(brake);
 
-      // Doesn't run if it is skills or something else
-      if (autonomousNumber < 4){
-        // Schedule the intake to stop just before the end of the autonomous period
-        // Rings occasionally get stuck and take longer than usual, this is just a precaution
-        timer().event(stopIntake, 14800);
-      }
-
       // Run the autonomous that was selected during the pre-auton phase
-      switch (autonomousNumber) {
-        case 0:
+      switch (autonSelection) {
+        case RED_LEFT:
           auton::redLeft();
           break;
-        case 1:
+        case RED_RIGHT:
           auton::redRight();
           break;
-        case 2:
+        case BLUE_LEFT:
           auton::blueLeft();
           break;
-        case 3:
+        case BLUE_RIGHT:
           auton::blueRight();
           break;
-        case 4:
+        case SKILLS:
           auton::skills();
           break;
+        case NONE:
+          break;
       }
-
+      
       // Start and stop motors
       leftDrive.setStopping(coast);
       rightDrive.setStopping(coast);
       leftDrive.spin(fwd);
       rightDrive.spin(fwd);
-      wallStakeMot.spin(fwd); 
       
     }
     

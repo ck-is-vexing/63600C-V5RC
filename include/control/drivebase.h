@@ -12,15 +12,15 @@
  */
 class drivebase {
   private:
-    PID headingPID;
-    PID fancyDrivePID;
-    PID drivePID;
-
     vex::motor_group& ld;
     vex::motor_group& rd;
     vex::brain& br;
     vex::inertial& inert;
     vex::gps& gps;
+
+    PID headingPID;
+    PID fancyDrivePID;
+    PID drivePID;
 
     const double xOffsetGPS;
     const double yOffsetGPS;

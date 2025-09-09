@@ -7,7 +7,6 @@ namespace auton {
   }
 
   void blueRight() {
-
   }
 
   void redLeft() {

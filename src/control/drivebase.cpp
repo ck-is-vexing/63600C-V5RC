@@ -190,7 +190,6 @@ void drivebase::posDriveTo(double desiredX, double desiredY, double precision, d
 
   // vars
   double currentAngle;
-  double currentDistance;
 
   // Loop of recursions
   for (int i = 0; i < recursions; i++){
@@ -262,7 +261,8 @@ double drivebase::get_y() {
 
 // Renders an approximation of the robot position on the Brain screen
 void drivebase::renderRobot() {
-
+  //TODO: Could the trig code be mixing up rad and deg?
+  
   // VEX Brain is 480x240p
   // 20p = 1 foot
   // GPS sensor (0,0) is at the center of the field

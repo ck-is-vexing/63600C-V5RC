@@ -3,7 +3,7 @@
 
 #include "vex.h"
 #include "control/drivebase.h"
-#include "control/scoringMech.h"
+#include "control/ccurve.h"
 using namespace vex;
 
 extern brain Brain;
@@ -11,13 +11,13 @@ extern controller Controller1;
 
 // Drivetrain motors
 extern motor leftBack;
+extern motor leftMiddle;
 extern motor leftFront;
-extern motor leftTop;
 extern motor_group leftDrive;
 
 extern motor rightBack;
+extern motor rightMiddle;
 extern motor rightFront;
-extern motor rightTop;
 extern motor_group rightDrive;
 
 
@@ -25,11 +25,8 @@ extern motor_group rightDrive;
 extern motor intakeUpper;
 extern motor intakeLower;
 
-// Wall Stake Motor
-extern motor wallStakeMot;
-
 // Pneumatics
-extern digital_out clampPneumatic;
+extern digital_out intakePneumatic;
 
 // Other Sensors
 extern gps GPS;
@@ -39,8 +36,9 @@ extern rotation wallStakeRot;
 // Drivetrain
 extern drivebase bot;
 
-// Wall stake
-extern wallStake ws;
+// Rapid Trigger
+extern RapidTrigger leftJoystick;
+extern RapidTrigger rightJoystick;
 
 // Callback to stop intake
 void stopIntake( void *arg );

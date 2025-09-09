@@ -1,4 +1,3 @@
-#include "vex.h"
 #include "func/PID.h"
 
 // Assign Values

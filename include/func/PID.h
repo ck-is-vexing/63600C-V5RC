@@ -1,6 +1,8 @@
 #ifndef PID_H
 #define PID_H
 
+#include "vex.h"
+
 /**
  * @class PID
  * @brief A general implementation of a PID controller

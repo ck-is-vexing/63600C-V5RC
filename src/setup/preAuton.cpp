@@ -1,5 +1,4 @@
 #include "setup/preAuton.h"
-#include "robot-config.h"
 
 namespace preAuton {
 

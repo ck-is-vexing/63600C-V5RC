@@ -1,6 +1,8 @@
 #ifndef PREAUTON_H
 #define PREAUTON_H
 
+#include "robot-config.h"
+
 // TODO: Add comments
 namespace preAuton {
 
