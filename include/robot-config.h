@@ -1,5 +1,4 @@
-#ifndef ROBOT_CONFIG_H
-#define ROBOT_CONFIG_H
+#pragma once
 
 #include "vex.h"
 #include "control/drivebase.h"
@@ -34,16 +33,12 @@ extern inertial Inertial;
 extern rotation wallStakeRot;
 
 // Drivetrain
-extern drivebase bot;
+extern Drivebase bot;
 
 // Rapid Trigger
 extern RapidTrigger leftJoystick;
 extern RapidTrigger rightJoystick;
 
-// Callback to stop intake
 void stopIntake( void *arg );
 
-// Initializer for robot configuration
 void vexcodeInit( void );
-
-#endif

@@ -1,27 +1,48 @@
-#ifndef BUTTON_H
-#define BUTTON_H
+#pragma once
 
 #include <string>
 #include "vex.h"
 
-// TODO: add comments
-// General VEX brain button implementation
+/**
+ * @class Button
+ * @brief Create a clickable button on VEX brain screen
+ * 
+ */
 class Button {
   private:
-    int xpos, ypos, x2pos, y2pos; // Positions for the 2 corners of the button
-    std::string textString; // The string to be printed on the button
-    vex::color vexButtonColor, vexTextColor; // The color of the button and the text
+    int xpos, ypos, x2pos, y2pos; // 2 corners of the button
+    std::string textString;
+    vex::color vexButtonColor, vexTextColor;
     vex::brain& br;
   public:
-    // x, y, x2, and y2 are the coordinates for upper left and lower right corners of the button, respectively
-    // text string goes roughly in the center of the button
-    // buttonColor and textColor are vex colors
+
+    /**
+     * @brief Construct a new Button
+     * 
+     * @param x First corner x coordinate
+     * @param y First corner y coordinate
+     * @param x2 Second corner x coordinate
+     * @param y2 Second corner y coordinate
+     * @param text Text displayed inside the button
+     * @param buttonColor VEX color for button
+     * @param textColor VEX color for text
+     * @param brain VEX brain object
+     */
     Button(int x, int y, int x2, int y2, std::string text, vex::color buttonColor, vex::color textColor, vex::brain& brain);
 
+    /**
+     * @brief Render the button on brain screen
+     * 
+     * Run after every time the screen may be cleared
+     * 
+     */
     void render();
 
-    // Returns true if there currently is a press on the button, otherwise returns false
+    /**
+     * @brief Check if the button is currently being pressed
+     * 
+     * @return true if being pressed
+     * @return false if not being pressed
+     */
     bool isClicked();
 };
-
-#endif
