@@ -1,6 +1,8 @@
-#include "setup/preAuton.h"
+#include "game/preAuton.h"
 
-preAuton::gpsBlueAngle = 90;
+int preAuton::gpsBlueAngle = 90;
+int preAuton::inertialAngle = 0;
+global::autonomousTypes preAuton::autonSelection = global::autonomousTypes::NONE;
 
 void preAuton::autonSelector() {
   
@@ -33,41 +35,41 @@ void preAuton::autonSelector() {
   while (true) {
 
     if (redLeft.isClicked() == true) {
-      autonSelection = global::RED_LEFT;
-      inertialAngle = 0;
+      preAuton::autonSelection = global::autonomousTypes::RED_LEFT;
+      preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Red Left Selected");
       break;
 
     } else if (redRight.isClicked() == true) {
-      autonSelection = global::RED_RIGHT;
-      inertialAngle = 0;
+      preAuton::autonSelection = global::autonomousTypes::RED_RIGHT;
+      preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Red Right Selected");
       break;
 
     } else if (blueLeft.isClicked() == true) {
-      autonSelection = global::BLUE_LEFT;
-      inertialAngle = 0;
+      preAuton::autonSelection = global::autonomousTypes::BLUE_LEFT;
+      preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Blue Left Selected");
       break;
 
     } else if (blueRight.isClicked() == true) {
-      autonSelection = global::BLUE_RIGHT;
-      inertialAngle = 0;
+      preAuton::autonSelection = global::autonomousTypes::BLUE_RIGHT;
+      preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Blue Right Selected");
       break;
 
     } else if (skills.isClicked() == true) {
-      autonSelection = global::SKILLS;
+      preAuton::autonSelection = global::autonomousTypes::SKILLS;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Skills Selected");
       break;
 
     } else if (noAuton.isClicked() == true) {
-      autonSelection = global::NONE;
+      preAuton::autonSelection = global::autonomousTypes::NONE;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Cancelled");
       break;
@@ -91,7 +93,7 @@ void preAuton::autonSelector() {
 
     // Quits if loop has been running more than 30 seconds
     if (t > 1500) {
-      autonSelection = global::NONE;
+      preAuton::autonSelection = global::autonomousTypes::NONE;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Aborted!");
       break;

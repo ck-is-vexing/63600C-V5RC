@@ -1,8 +1,11 @@
 #pragma once
 
 #include "robot-config.h"
+#include "func/button.h"
+#include "global.h"
 
 /**
+ * @namespace preAuton
  * @brief Functions for before the start of competition
  * 
  */
@@ -15,6 +18,18 @@ namespace preAuton {
    */
   extern int gpsBlueAngle;
   
+  /**
+   * @brief enum instance for selecting auton
+   * 
+   */
+  extern global::autonomousTypes autonSelection;
+
+  /**
+   * @brief Starting angle of the robot. Used when GPS is disabled
+   * 
+   */
+  extern int inertialAngle;
+
   /**
    * @brief Load interface for autonomous selection
    * 
@@ -30,6 +45,4 @@ namespace preAuton {
    * @param averageSeconds # of seconds to average GPS data over
    */
   void inertialGPSCalibrate(double averageSeconds = 1);
-
-  //void autonSelector();
 }

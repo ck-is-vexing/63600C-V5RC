@@ -1,6 +1,4 @@
 #include "global.h"
 
-namespace global {
-  const bool debugMode = true;
-  const bool gpsAllowed = true;
-}
+const bool global::debugMode = true;
+const bool global::gpsAllowed = true;

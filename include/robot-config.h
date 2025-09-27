@@ -23,6 +23,7 @@ extern motor_group rightDrive;
 // Intake motors
 extern motor intakeUpper;
 extern motor intakeLower;
+extern motor intakeBack;
 
 // Pneumatics
 extern digital_out intakePneumatic;

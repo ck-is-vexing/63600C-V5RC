@@ -1,4 +1,4 @@
-#include "auton/autonomous.h"
+#include "game/autonomous.h"
 
 void auton::blueLeft() {
 }

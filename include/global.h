@@ -1,6 +1,7 @@
 #pragma once
 
 /**
+ * @namespace global
  * @brief Global variables
  * 
  */
@@ -13,7 +14,7 @@ namespace global {
   extern const bool gpsAllowed;
 
   /// Switch between different autonomous options
-  enum autonomousTypes {
+  enum class autonomousTypes {
     NONE,
     SKILLS,
     RED_LEFT,
