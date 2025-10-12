@@ -32,7 +32,7 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
       currentAngle = inert.heading();
       double change = headingPID.update(desiredAngle, currentAngle);
       
-      // Represents the realistic abilites of VEX motors
+      // Represents the realistic abilities of VEX motors
       if (std::abs(change) < minimumSpeed) {
         change = std::copysign(minimumSpeed, change);
       }
@@ -144,7 +144,7 @@ void Drivebase::posDriveTo(double desiredX, double desiredY, double precision, d
   fancyDrivePID.reset();
 }
 
-double Drivebase::get_x() {
+double Drivebase::get_x() const {
   
   double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (inert.heading() * M_PI / 180);
   double deltaX = cos(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);
@@ -152,7 +152,7 @@ double Drivebase::get_x() {
   return (gps.xPosition(distanceUnits::in) + deltaX);
 }
 
-double Drivebase::get_y() {
+double Drivebase::get_y() const {
 
   double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (inert.heading() * M_PI / 180);
   double deltaY = sin(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);

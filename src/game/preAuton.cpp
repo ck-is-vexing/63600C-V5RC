@@ -4,6 +4,7 @@ int preAuton::gpsBlueAngle = 90;
 int preAuton::inertialAngle = 0;
 global::autonomousTypes preAuton::autonSelection = global::autonomousTypes::NONE;
 
+
 void preAuton::autonSelector() {
   
   Button redLeft = Button(10, 10, 110, 110, "Red Left", red, white, Brain);

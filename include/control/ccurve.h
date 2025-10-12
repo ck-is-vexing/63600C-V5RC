@@ -15,7 +15,7 @@
  */
 namespace curves {
 
-  extern double k; // sigmoidal tuning, balance of notable but not too steep
+  extern double k; // Sigmoidal tuning parameter
 
   /**
    * @brief Returns axis position, use as a placeholder when no transformation is intended
@@ -66,7 +66,7 @@ namespace curves {
   /**
    * @brief Sigmoidal-inspired transformation of axis position using sqrt
    * 
-   * Transformes data based on two square roots, similar to a sigmoid:
+   * Transforms data based on two square roots, similar to a sigmoid:
    * For x < 50, f(x) = -√(-50(x - 50) - 50) + 50
    * For x ≥ 50, f(x) = 7.0711 * √(x - 50) + 50
    *

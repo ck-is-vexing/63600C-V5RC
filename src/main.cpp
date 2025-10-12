@@ -13,17 +13,15 @@ void pre_auton(void) {
   preAuton::autonSelector();
 
   if (global::gpsAllowed == true) {
-    
     // Wait a short period to allow GPS to register field strips
     wait(300,msec);
 
     // Force a GPS update before code that needs it
     Brain.Screen.print(GPS.heading()); 
-
+  
     preAuton::inertialGPSCalibrate(0.5);
 
   } else {
-
     // Manual backup in case there aren't GPS strips
     Inertial.calibrate();
     while (Inertial.isCalibrating()) { wait(100,msec); }
@@ -42,7 +40,6 @@ void pre_auton(void) {
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
 
-  // Initialize Robot Configuration
   vexcodeInit();
 }
 

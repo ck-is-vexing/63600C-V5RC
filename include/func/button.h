@@ -44,5 +44,5 @@ class Button {
      * @return true if being pressed
      * @return false if not being pressed
      */
-    bool isClicked();
+    bool isClicked() const;
 };

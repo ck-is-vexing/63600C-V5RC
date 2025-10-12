@@ -2,15 +2,16 @@
 
 #include "robot-config.h"
 #include <fstream>
+#include <vector>
 using namespace vex; // Set the namespace to vex
 
 // Define variables
 int updateFrequency = 10; // One update every __ ms
 
 // The length is calculated with this equation: (60 / (updateFrequency / 1000)) * 2
-uint8_t leftDT[6000]; // Stores the velocities of the left side of the drivetrain
-uint8_t rightDT[6000]; // Stores the velocities of the right side of the drivetrain
-uint8_t angle[6000]; // Stores the angles of the robot using the inertial sensor
+std::vector<uint8_t> leftDT;
+std::vector<uint8_t> rightDT;
+std::vector<uint8_t> angle;
 
 
 void saveTick(int t) {

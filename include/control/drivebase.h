@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vex.h"
 #include "func/PID.h"
 
 /**
@@ -92,14 +93,14 @@ class Drivebase {
      * 
      * @return double 
      */
-    double get_x();
+    double get_x() const;
 
     /**
      * @brief Returns the Y coordinate of the robot center, in inches
      * 
      * @return double 
      */
-    double get_y();
+    double get_y() const;
 
     /**
      * @brief Renders an approximation of the robot position on Brain screen
@@ -113,7 +114,7 @@ class Drivebase {
      * Turns the robot to the setpoint but doesn't break
      * out of PID loop. Used as an example in interviews.
      * 
-     * @param desiredAngle Angle to forever turn torwards
+     * @param desiredAngle Angle to forever turn towards
      */
     void demoTo(double desiredAngle = 0);
 };

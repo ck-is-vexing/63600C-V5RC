@@ -9,7 +9,7 @@ void Button::render() {
   br.Screen.printAt((xpos + 10), (ypos + y2pos) / 2, false, textString.c_str());
 }
 
-bool Button::isClicked(){
+bool Button::isClicked() const {
 
   if (br.Screen.pressing() && 
       br.Screen.xPosition() >= xpos && 

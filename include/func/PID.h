@@ -21,7 +21,7 @@ class PID {
     double Kd;
     double integral = 0;
     double derivative;
-    int dT; // Change in time, in ms, of every tick
+    int dT;
     bool rF; // Toggle for rotational error fix
   public:
     double oldError; // The previous error, used for calculating Integral
@@ -36,7 +36,7 @@ class PID {
      * @param Kp Proportional tuning value
      * @param Ki Integral tuning value
      * @param Kd Derivative tuning value
-     * @param deltaTime The time that elapses between ticks
+     * @param deltaTime The time that elapses between ticks, in ms
      * @param rotationFix (Optional) When true, rotationFix enables the outputted value to be in the correct direction for a 360 degree mechanical system
      * 
      */

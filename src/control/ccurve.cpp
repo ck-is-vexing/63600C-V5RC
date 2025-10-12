@@ -1,7 +1,6 @@
 #include "control/ccurve.h"
 
-
-double curves::k = 0.08;
+double curves::k = 0.08; // Balance of notable, but not too steep
 
 double curves::linear(int axisPos) {
   return axisPos;
