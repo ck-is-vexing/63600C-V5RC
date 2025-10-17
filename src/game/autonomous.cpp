@@ -1,4 +1,5 @@
 #include "game/autonomous.h"
+#include "robot-config.h"
 
 void auton::blueLeft() {
 }

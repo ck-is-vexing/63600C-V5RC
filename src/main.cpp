@@ -1,25 +1,26 @@
 #include "game/preAuton.h"
 #include "game/autonomous.h"
 #include "game/driver.h"
-#include <iostream>
+#include "robot-config.h"
+#include "definition.h"
 
 using namespace vex;
 competition Competition;
 
 /// Run before match begins
 void pre_auton(void) {
-  std::cout << "Pre-Auton Init" << std::endl;
+  printl("Pre-Auton Init");
 
   preAuton::autonSelector();
 
   if (global::gpsAllowed == true) {
     // Wait a short period to allow GPS to register field strips
-    wait(300,msec);
+    wait(300, msec);
 
     // Force a GPS update before code that needs it
     Brain.Screen.print(GPS.heading()); 
   
-    preAuton::inertialGPSCalibrate(0.5);
+    preAuton::inertialGPSCalibrate(1);
 
   } else {
     // Manual backup in case there aren't GPS strips
@@ -35,7 +36,7 @@ void pre_auton(void) {
   intakeUpper.setVelocity(100, pct);
   intakeBack.setVelocity(100, pct);
 
-  intakePneumatic.set(false);
+  redirect.setTo(true);
 
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
@@ -45,7 +46,7 @@ void pre_auton(void) {
 
 /// Run during match autonomous
 void autonomous(void) {
-  std::cout << "Auton Init" << std::endl;
+  printl("Auton Init");
 
   switch (preAuton::autonSelection) {
     case global::autonomousTypes::RED_LEFT:
@@ -70,7 +71,7 @@ void autonomous(void) {
 
 /// Run during match driver control
 void usercontrol(void) {
-  std::cout << "Driver Init" << std::endl;
+  printl("Driver Init");
 
   // Intake failsafe
   intakeLower.stop(coast);

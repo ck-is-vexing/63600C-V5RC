@@ -16,12 +16,15 @@ motor rightFront = motor(PORT11, ratio6_1);
 motor_group rightDrive = motor_group(rightBack, rightMiddle, rightFront);
 
 // Intake motors
-motor intakeUpper = motor(PORT9, ratio6_1); // 5.5W
-motor intakeLower = motor(PORT10, ratio18_1); // 5.5W
-motor intakeBack = motor(PORT1, ratio18_1); //  5.5W
+motor intakeUpper = motor(PORT3, ratio6_1, true); // 5.5W
+motor intakeLower = motor(PORT1, ratio18_1); // 5.5W
+motor intakeBack = motor(PORT4, ratio18_1, true); //  5.5W
+
+// Hopper motor
+motor hopper = motor(PORT2, ratio18_1, true); // 5.5W
 
 // Pneumatics
-digital_out intakePneumatic = digital_out(Brain.ThreeWirePort.H);
+Pneumatic redirect = Pneumatic(Brain.ThreeWirePort.A, true);
 
 // Other Sensors 175.1
 gps GPS = gps(PORT15, 178.2); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the support is slightly bent :(
@@ -34,11 +37,5 @@ Drivebase bot = Drivebase(leftDrive, rightDrive, Brain, Inertial, GPS);
 // RT init
 RapidTrigger leftJoystick = RapidTrigger(Controller1.Axis3, curves::linear);
 RapidTrigger rightJoystick = RapidTrigger(Controller1.Axis2, curves::linear);
-
-void stopIntake( void *arg ) {
-  intakeLower.stop(coast);
-  intakeUpper.stop(coast);
-  intakeBack.stop(coast);
-}
 
 void vexcodeInit( void ) {}

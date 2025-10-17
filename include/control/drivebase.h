@@ -19,18 +19,16 @@ class Drivebase {
     PID headingPID;
     PID fancyDrivePID;
     PID drivePID;
-
-    const double xOffsetGPS;
-    const double yOffsetGPS;
+    
   public:
-
+    
     /**
      * @brief Construct a new drivebase
      * 
      * @param leftDrivetrain Motor group for left side of drivetrain
      * @param rightDrivetrain Motor group for right side of drivetrain
      * @param robotBrain VEX brain object
-     * @param inertialSensor VEX intertial sensor object
+     * @param inertialSensor VEX inertial sensor object
      * @param GPSSensor VEX gps sensor object
      */
     Drivebase(vex::motor_group& leftDrivetrain, vex::motor_group& rightDrivetrain, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor);

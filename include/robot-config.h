@@ -3,6 +3,8 @@
 #include "vex.h"
 #include "control/drivebase.h"
 #include "control/ccurve.h"
+#include "control/pneumatic.h"
+
 using namespace vex;
 
 extern brain Brain;
@@ -19,14 +21,16 @@ extern motor rightMiddle;
 extern motor rightFront;
 extern motor_group rightDrive;
 
-
 // Intake motors
 extern motor intakeUpper;
 extern motor intakeLower;
 extern motor intakeBack;
 
+// Hopper motor
+extern motor hopper;
+
 // Pneumatics
-extern digital_out intakePneumatic;
+extern Pneumatic redirect;
 
 // Other Sensors
 extern gps GPS;
@@ -39,7 +43,5 @@ extern Drivebase bot;
 // Rapid Trigger
 extern RapidTrigger leftJoystick;
 extern RapidTrigger rightJoystick;
-
-void stopIntake( void *arg );
 
 void vexcodeInit( void );

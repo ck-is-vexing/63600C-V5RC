@@ -1,4 +1,6 @@
 #include "game/preAuton.h"
+#include "robot-config.h"
+#include "func/button.h"
 
 int preAuton::gpsBlueAngle = 90;
 int preAuton::inertialAngle = 0;
@@ -6,7 +8,9 @@ global::autonomousTypes preAuton::autonSelection = global::autonomousTypes::NONE
 
 
 void preAuton::autonSelector() {
-  
+
+  constexpr unsigned int MAX_SECONDS = 30;
+
   Button redLeft = Button(10, 10, 110, 110, "Red Left", red, white, Brain);
   Button redRight = Button(120, 10, 220, 110, "Red Right", red, white, Brain);
   Button blueLeft = Button(10, 120, 110, 220, "Blue Left", blue, white, Brain);
@@ -92,8 +96,8 @@ void preAuton::autonSelector() {
       wait(300, msec);
     }
 
-    // Quits if loop has been running more than 30 seconds
-    if (t > 1500) {
+
+    if (t > (MAX_SECONDS * 50)) {
       preAuton::autonSelection = global::autonomousTypes::NONE;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Aborted!");
@@ -114,7 +118,7 @@ void preAuton::inertialGPSCalibrate(double averageSeconds) {
   for(i = 0; i < (averageSeconds * 25) + 1; i++) {
 
     averagedHeading += (GPS.heading() - preAuton::gpsBlueAngle + 90);
-    wait(40,msec); // Update frequency of GPS sensor
+    wait(40, msec); // Update frequency of GPS sensor
   }
 
   averagedHeading /= i;

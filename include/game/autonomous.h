@@ -1,7 +1,5 @@
 #pragma once
 
-#include "robot-config.h"
-
 /**
  * @namespace auton
  * @brief Contains functions that control the robot autonomously when run

@@ -1,4 +1,5 @@
 #include "game/driver.h"
+#include "robot-config.h"
 
 void driver::checkInputs() {
 
@@ -12,18 +13,36 @@ void driver::checkInputs() {
     intakeLower.spin(fwd, 100, pct);
     intakeBack.spin(fwd, 100, pct);
     intakeUpper.spin(fwd, 100, pct);
+    hopper.spin(fwd, 100, pct);
+
+    redirect.setTo(false);
 
   // Center Goal
   } else if (Controller1.ButtonR2.pressing()) {
     intakeLower.spin(fwd, 100, pct);
     intakeBack.spin(fwd, 100, pct);
     intakeUpper.spin(reverse, 100, pct);
+    hopper.spin(fwd, 100, pct);
+
+    redirect.setTo(false);
   
+  // Intake to hopper
   } else if (Controller1.ButtonL1.pressing()) {
+    intakeLower.spin(fwd, 100, pct);
     intakeBack.spin(fwd, 100, pct);
     intakeUpper.spin(fwd, 100, pct);
 
+    redirect.setTo(true);
+
+  // Low goal
   } else if (Controller1.ButtonL2.pressing()) {
+    intakeLower.spin(reverse, 100, pct);
+    intakeBack.spin(fwd, 100, pct);
+    hopper.spin(fwd, 100, pct);
+    
+  // Outtake
+  } else if (Controller1.ButtonY.pressing()) {
+    intakeLower.spin(reverse, 100, pct);
     intakeBack.spin(reverse, 100, pct);
     intakeUpper.spin(reverse, 100, pct);
 
@@ -31,5 +50,11 @@ void driver::checkInputs() {
     intakeLower.stop(coast);
     intakeBack.stop(coast);
     intakeUpper.stop(coast);
+    hopper.stop(coast);
+  }
+
+  // Toggle flap
+  if (Controller1.ButtonRight.pressing()) {
+    redirect.toggle();
   }
 }

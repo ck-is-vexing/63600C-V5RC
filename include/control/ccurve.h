@@ -2,7 +2,6 @@
 
 #include "vex.h"
 #include <functional>
-#include <iostream>
 
 /**
  * @namespace curves

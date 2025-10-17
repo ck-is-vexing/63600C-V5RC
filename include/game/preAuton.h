@@ -1,7 +1,5 @@
 #pragma once
 
-#include "robot-config.h"
-#include "func/button.h"
 #include "global.h"
 
 /**

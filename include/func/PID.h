@@ -1,7 +1,5 @@
 #pragma once
 
-#include "vex.h"
-
 /**
  * @class PID
  * @brief A general implementation of a PID controller
@@ -43,7 +41,7 @@ class PID {
     PID(double Kp, double Ki, double Kd, int deltaTime, bool rotationFix = false);
 
     /**
-     * @brief Updates the PID controller and retuns the value to be applied to the mechanical system
+     * @brief Updates the PID controller and returns the value to be applied to the mechanical system
      *
      * @param setpoint The desired value for the process variable to reach
      * @param pv Short for process variable, this is the current value of the variable that is intended to reach the setpoint

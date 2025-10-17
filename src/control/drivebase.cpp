@@ -1,28 +1,34 @@
-#include "vex.h"
 #include "control/drivebase.h"
 #include <cmath>
-#include <iostream>
+
 using namespace vex;
+
+namespace {
+  constexpr double WHEEL_DIAMETER = 2.75;
+  constexpr double GEAR_RATIO = 36.0 / 48.0;
+
+  constexpr double INCH_CONVERSION = (M_PI * WHEEL_DIAMETER) * GEAR_RATIO / 360.0;
+
+  constexpr double X_OFFSET_GPS_INCHES = 2;
+  constexpr double Y_OFFSET_GPS_INCHES = -5.5;
+}
 
 Drivebase::Drivebase(vex::motor_group& leftDrivetrain, vex::motor_group& rightDrivetrain, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
 : ld(leftDrivetrain), rd(rightDrivetrain), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
   headingPID(0.55, 0, 30, 10, true),
   fancyDrivePID(1, 0, 0, 40), // 40ms because of gps refresh rate
-  drivePID(0.8, 0, 0, 10),
-  xOffsetGPS(2), // In inches
-  yOffsetGPS(-5.5) {} // In inches
+  drivePID(0.8, 0, 0, 10) {}
 
 void Drivebase::drive(directionType direction, double inches, int velocityPercent){
 
-  // inches divided by (Circumference of the wheels) * (The gear ratio of the drivetrain) / (360, to put the number into degrees)
-  double motorDegrees = inches / (0.018);
+  double motorDegrees = inches / (INCH_CONVERSION); // 0.018 as a backup
 
   ld.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct, false);
   rd.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct);
 }
 
 void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllowed, int recursions, double minimumSpeed) {
-
+  
   headingPID.reset();
   double currentAngle;
 
@@ -37,8 +43,8 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
         change = std::copysign(minimumSpeed, change);
       }
 
-      ld.spin(fwd,change,pct);
-      rd.spin(reverse,change,pct);
+      ld.spin(fwd, change, pct);
+      rd.spin(reverse, change, pct);
 
       // Check for completion of the tick loop
       if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
@@ -48,7 +54,7 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
         break;
       }
 
-      wait(10,msec); 
+      wait(10, msec); 
     }
 
     ld.stop(brake);
@@ -90,20 +96,20 @@ void Drivebase::driveTo(vex::directionType direction, double desiredInches, doub
       currentAngle = inert.heading();
       double angleChange = headingPID.update(desiredAngle, currentAngle);
 
-      // Takes the integral of the derivative of motor position and convertsto inches. Required because motor position is measured 0-360 degrees
+      // Takes the integral of the derivative of motor position and converts to inches. Required because motor position is measured 0-360 degrees
       currentDeg = (ld.position(degrees) + rd.position(degrees)) / 2;
-      currentDistance += (currentDeg - oldDeg) * (0.018);
+      currentDistance += (currentDeg - oldDeg) * INCH_CONVERSION;
       oldDeg = currentDeg;
       
       double driveChange = drivePID.update(desiredInches, currentDistance);
       
-      // Represents the realistic abilites of VEX motors
+      // Represents the realistic abilities of VEX motors
       if (std::abs(driveChange) < minSpeed) {
         driveChange = std::copysign(minSpeed, driveChange);
       }
 
-      ld.spin(fwd,angleChange + driveChange,pct);
-      rd.spin(fwd,-angleChange + driveChange,pct);
+      ld.spin(fwd, angleChange + driveChange, pct);
+      rd.spin(fwd, -angleChange + driveChange, pct);
 
       // Check for completion of the tick loop
       if (currentDistance < (desiredInches + precision) && currentDistance > (desiredInches - precision)){
@@ -146,23 +152,23 @@ void Drivebase::posDriveTo(double desiredX, double desiredY, double precision, d
 
 double Drivebase::get_x() const {
   
-  double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (inert.heading() * M_PI / 180);
-  double deltaX = cos(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);
+  double theta = 180 - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - (inert.heading() * M_PI / 180);
+  double deltaX = cos(theta) * sqrt(X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES + Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES);
 
   return (gps.xPosition(distanceUnits::in) + deltaX);
 }
 
 double Drivebase::get_y() const {
 
-  double theta = 180 - atan(xOffsetGPS / yOffsetGPS) - (inert.heading() * M_PI / 180);
-  double deltaY = sin(theta) * sqrt(xOffsetGPS * xOffsetGPS + yOffsetGPS * yOffsetGPS);
+  double theta = 180 - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - (inert.heading() * M_PI / 180);
+  double deltaY = sin(theta) * sqrt(X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES + Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES);
 
   return (gps.yPosition(distanceUnits::in) + deltaY);
 }
 
 void Drivebase::renderRobot() {
   //TODO: Could the trig code be mixing up rad and deg?
-  
+
   // VEX Brain is 480x240p
   // 20p = 1 foot
   // GPS sensor (0,0) is at the center of the field
@@ -182,13 +188,15 @@ void Drivebase::renderRobot() {
   }
 
   // Draw robot vector
+  constexpr int VECTOR_LENGTH_PIXELS = 40;
+
   double angle = inert.heading() * M_PI / 180;
   double x = get_x() * 5/3; // Convert inches to pixels
   double x_gps = gps.xPosition(distanceUnits::in) * 5/3;
-  double x2 = x + cos(angle) * 40; // 40 is the desired length of the render of the vector
+  double x2 = x + cos(angle) * VECTOR_LENGTH_PIXELS;
   double y = get_y() * 5/3;
   double y_gps = gps.yPosition(distanceUnits::in) * 5/3;
-  double y2 = y + sin(angle) * 40;
+  double y2 = y + sin(angle) * VECTOR_LENGTH_PIXELS;
 
   br.Screen.setPenColor(blue);
   br.Screen.setFillColor(blue);
@@ -224,9 +232,9 @@ void Drivebase::demoTo(double desiredAngle) {
     currentAngle = inert.heading();
     double change = headingPID.update(desiredAngle, currentAngle);
 
-    ld.spin(fwd,change,pct);
-    rd.spin(reverse,change,pct);
+    ld.spin(fwd, change, pct);
+    rd.spin(reverse, change, pct);
     
-    wait(10,msec); 
+    wait(10, msec); 
   }
 }
