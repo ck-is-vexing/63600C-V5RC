@@ -1,7 +1,7 @@
 #include "control/pneumatic.h"
 #include "definition.h"
 
-Pneumatic::Pneumatic(vex::triport::port& solenoidPort, const bool reverse)
+Pneumatic::Pneumatic(vex::triport::port& solenoidPort, bool reverse)
 : solenoid(vex::digital_out(solenoidPort)), reversed(reverse), toggleCooldownTime(0) {}
 
 bool Pneumatic::getValue() {
@@ -14,11 +14,9 @@ bool Pneumatic::getValue() {
   }
 }
 
-void Pneumatic::toggle() {
-  printl(toggleCooldownTime);
-  printl(vex::timer::system());
+void Pneumatic::toggle(bool override) {
 
-  constexpr unsigned int COOLDOWN_MS = 100;
+  constexpr unsigned int COOLDOWN_MS = 350;
 
   if ((toggleCooldownTime + COOLDOWN_MS) < vex::timer::system()) {
     const unsigned int value = solenoid.value();
@@ -28,6 +26,10 @@ void Pneumatic::toggle() {
       solenoid.set(true ^ reversed);
     } else {
       solenoid.set(false ^ reversed);
+    }
+
+    if (override) {
+      reversed = !reversed;
     }
   }
 }

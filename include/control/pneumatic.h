@@ -11,7 +11,7 @@
 class Pneumatic {
   private:
     vex::digital_out solenoid;
-    const bool reversed;
+    bool reversed;
     uint32_t toggleCooldownTime;
   public:
   
@@ -21,7 +21,7 @@ class Pneumatic {
      * @param solenoidPort Pneumatic 3 wire port
      * @param reverse Set to true to reverse the pneumatic values
      */
-    Pneumatic(vex::triport::port& solenoidPort, const bool reverse = false);
+    Pneumatic(vex::triport::port& solenoidPort, bool reverse = false);
 
     /**
      * @brief Returns the current pneumatic value
@@ -34,8 +34,9 @@ class Pneumatic {
     /**
      * @brief Toggle the pneumatic to the opposite state
      * 
+     * @param override true means the pneumatic will stay toggled to the opposite value, even when using setTo
      */
-    void toggle();
+    void toggle(bool override = false);
 
     /**
      * @brief Set the pneumatic's state

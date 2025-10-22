@@ -23,10 +23,8 @@ void driver::checkInputs() {
     intakeBack.spin(fwd, 100, pct);
     intakeUpper.spin(reverse, 100, pct);
     hopper.spin(fwd, 100, pct);
-
-    redirect.setTo(false);
   
-  // Intake to hopper
+  // Intake into Hopper
   } else if (Controller1.ButtonL1.pressing()) {
     intakeLower.spin(fwd, 100, pct);
     intakeBack.spin(fwd, 100, pct);
@@ -34,7 +32,7 @@ void driver::checkInputs() {
 
     redirect.setTo(true);
 
-  // Low goal
+  // Low Goal
   } else if (Controller1.ButtonL2.pressing()) {
     intakeLower.spin(reverse, 100, pct);
     intakeBack.spin(fwd, 100, pct);
@@ -53,8 +51,11 @@ void driver::checkInputs() {
     hopper.stop(coast);
   }
 
-  // Toggle flap
   if (Controller1.ButtonRight.pressing()) {
-    redirect.toggle();
+    redirect.toggle(true);
+  }
+
+  if (Controller1.ButtonB.pressing()) {
+    matchLoadMech.toggle();
   }
 }

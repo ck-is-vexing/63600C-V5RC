@@ -51,6 +51,15 @@ class PID {
     double update(double setpoint, double pv);
 
     /**
+     * @brief Update PID tuning values
+     * 
+     * @param proportional Proportional tuning value
+     * @param integral Integral tuning value
+     * @param derivative Derivative tuning value
+     */
+    void setTuning(double proportional, double integral, double derivative);
+
+    /**
      * @brief Resets values of the PID Controller, use when setpoint changes
      * 
      */

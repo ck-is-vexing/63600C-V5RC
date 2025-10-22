@@ -25,9 +25,10 @@ motor hopper = motor(PORT2, ratio18_1, true); // 5.5W
 
 // Pneumatics
 Pneumatic redirect = Pneumatic(Brain.ThreeWirePort.A, true);
+Pneumatic matchLoadMech = Pneumatic(Brain.ThreeWirePort.B);
 
-// Other Sensors 175.1
-gps GPS = gps(PORT15, 178.2); // Second number is degree offset from facing the front of the robot. It isn't 180 deg because the support is slightly bent :(
+// Other Sensors
+gps GPS = gps(PORT7);
 inertial Inertial = inertial(PORT13);
 rotation wallStakeRot = rotation(PORT21, true);
 

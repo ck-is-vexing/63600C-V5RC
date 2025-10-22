@@ -31,6 +31,7 @@ extern motor hopper;
 
 // Pneumatics
 extern Pneumatic redirect;
+extern Pneumatic matchLoadMech;
 
 // Other Sensors
 extern gps GPS;

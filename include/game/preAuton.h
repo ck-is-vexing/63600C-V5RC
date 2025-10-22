@@ -40,7 +40,7 @@ namespace preAuton {
    * On average, more precise than setting up the robot perfectly every time.
    * GPS data is averaged over a period of time to cancel out noise.
    *
-   * @param averageSeconds # of seconds to average GPS data over
+   * @param averageSeconds  # of seconds to average GPS data over
    */
   void inertialGPSCalibrate(double averageSeconds = 1);
 }
