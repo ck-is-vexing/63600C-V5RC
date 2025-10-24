@@ -36,7 +36,6 @@ extern Pneumatic matchLoadMech;
 // Other Sensors
 extern gps GPS;
 extern inertial Inertial;
-extern rotation wallStakeRot;
 
 // Drivetrain
 extern Drivebase bot;

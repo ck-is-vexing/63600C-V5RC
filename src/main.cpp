@@ -11,7 +11,7 @@ competition Competition;
 void pre_auton(void) {
   printl("Pre-Auton Init");
 
-  preAuton::autonSelector();
+  //preAuton::autonSelector();
 
   if (global::gpsAllowed == true) {
     // Wait a short period to allow GPS to register field strips
@@ -86,7 +86,7 @@ void usercontrol(void) {
     // Manual autonomous trigger used for testing
     if (Controller1.ButtonX.pressing() && global::debugMode == true){
 
-      switch (preAuton::autonSelection) {
+      /*switch (preAuton::autonSelection) {
         case global::autonomousTypes::RED_LEFT:
           auton::redLeft();
           break;
@@ -104,7 +104,8 @@ void usercontrol(void) {
           break;
         case global::autonomousTypes::NONE:
           break;
-      }
+      }*/
+      auton::redRight();
       
       leftDrive.spin(fwd, 0, pct);
       rightDrive.spin(fwd, 0, pct);

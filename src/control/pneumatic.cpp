@@ -17,7 +17,7 @@ bool Pneumatic::getValue() {
 void Pneumatic::toggle(bool override) {
 
   constexpr unsigned int COOLDOWN_MS = 350;
-
+  
   if ((toggleCooldownTime + COOLDOWN_MS) < vex::timer::system()) {
     const unsigned int value = solenoid.value();
     toggleCooldownTime = vex::timer::system();

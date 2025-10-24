@@ -25,12 +25,11 @@ motor hopper = motor(PORT2, ratio18_1, true); // 5.5W
 
 // Pneumatics
 Pneumatic redirect = Pneumatic(Brain.ThreeWirePort.A, true);
-Pneumatic matchLoadMech = Pneumatic(Brain.ThreeWirePort.B);
+Pneumatic matchLoadMech = Pneumatic(Brain.ThreeWirePort.B, true);
 
 // Other Sensors
-gps GPS = gps(PORT7);
-inertial Inertial = inertial(PORT13);
-rotation wallStakeRot = rotation(PORT21, true);
+gps GPS = gps(PORT7, 359);
+inertial Inertial = inertial(PORT6);
 
 // 6m Drivetrain init
 Drivebase bot = Drivebase(leftDrive, rightDrive, Brain, Inertial, GPS);

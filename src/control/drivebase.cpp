@@ -1,5 +1,6 @@
 #include "control/drivebase.h"
 #include <cmath>
+#include "definition.h"
 
 using namespace vex;
 
@@ -15,7 +16,7 @@ namespace {
 
 Drivebase::Drivebase(vex::motor_group& leftDrivetrain, vex::motor_group& rightDrivetrain, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
 : ld(leftDrivetrain), rd(rightDrivetrain), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
-  headingPID(0.55, 0, 30, 10, true),
+  headingPID(0.5, 0.0001, 25, 10, true),
   fancyDrivePID(1, 0, 0, 40), // 40ms because of gps refresh rate
   drivePID(0.8, 0, 0, 10) {}
 
@@ -53,15 +54,16 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
 
         break;
       }
-
+      
       wait(10, msec); 
     }
 
     ld.stop(brake);
     rd.stop(brake);
+    headingPID.reset();
 
     // In case drivetrain is still in motion and moves away from setpoint
-    wait(200, msec);
+    wait(100, msec);
 
     currentAngle = inert.heading();
 
