@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/26vanhornna/Documents/Code/VEX/63600C-Vexcode-dev-offline",
+      "program": "/Users/26vanhornna/Documents/Code/VEX/63600C-Vexcode-dev-offline/build/Debug/outDebug"
+    }
+  ]
+}
