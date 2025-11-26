@@ -1,61 +1,34 @@
 #include "game/driver.h"
 #include "robot-config.h"
+#include "control/intake.h"
+
+void driver::registerEvents() {
+  Controller1.ButtonY.pressed(    []() { matchLoadMech.toggle(true); });
+  Controller1.ButtonB.pressed(    []() { redirect.toggle(true);      });
+  Controller1.ButtonRight.pressed([]() { wing.toggle(true);          });
+}
 
 void driver::checkInputs() {
 
-  leftDrive.setVelocity(leftJoystick.getValue(), pct);
-  rightDrive.setVelocity(rightJoystick.getValue(), pct);
-  //leftDrive.setVelocity(curves::quadratic(Controller1.Axis3.position()), pct);
-  //rightDrive.setVelocity(curves::quadratic(Controller1.Axis2.position()), pct);
+  leftDrive.setVelocity(leftJoystick.calculateValue(), pct);
+  rightDrive.setVelocity(rightJoystick.calculateValue(), pct);
 
-  // Long Goal
   if (Controller1.ButtonR1.pressing()) {
-    intakeLower.spin(fwd, 100, pct);
-    intakeBack.spin(fwd, 100, pct);
-    intakeUpper.spin(fwd, 100, pct);
-    hopper.spin(fwd, 100, pct);
+    intake::scoreLongGoal(100);
 
-    redirect.setTo(false);
-
-  // Center Goal
   } else if (Controller1.ButtonR2.pressing()) {
-    intakeLower.spin(fwd, 100, pct);
-    intakeBack.spin(fwd, 100, pct);
-    intakeUpper.spin(reverse, 100, pct);
-    hopper.spin(fwd, 100, pct);
+    intake::scoreCenterGoal(100, 50);
   
-  // Intake into Hopper
   } else if (Controller1.ButtonL1.pressing()) {
-    intakeLower.spin(fwd, 100, pct);
-    intakeBack.spin(fwd, 100, pct);
-    intakeUpper.spin(fwd, 100, pct);
+    intake::store(100);
 
-    redirect.setTo(true);
-
-  // Low Goal
   } else if (Controller1.ButtonL2.pressing()) {
-    intakeLower.spin(reverse, 100, pct);
-    intakeBack.spin(fwd, 100, pct);
-    hopper.spin(fwd, 100, pct);
-    
-  // Outtake
-  } else if (Controller1.ButtonY.pressing()) {
-    intakeLower.spin(reverse, 100, pct);
-    intakeBack.spin(reverse, 100, pct);
-    intakeUpper.spin(reverse, 100, pct);
+    intake::scoreLowGoal(100);
+
+  } else if (Controller1.ButtonA.pressing()) {
+    intake::outtake(100);
 
   } else {
-    intakeLower.stop(coast);
-    intakeBack.stop(coast);
-    intakeUpper.stop(coast);
-    hopper.stop(coast);
-  }
-
-  if (Controller1.ButtonRight.pressing()) {
-    redirect.toggle(true);
-  }
-
-  if (Controller1.ButtonB.pressing()) {
-    matchLoadMech.toggle();
+    intake::stop(coast);
   }
 }

@@ -14,18 +14,21 @@ namespace {
   constexpr double Y_OFFSET_GPS_INCHES = -5.5;
 }
 
-Drivebase::Drivebase(vex::motor_group& leftDrivetrain, vex::motor_group& rightDrivetrain, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
-: ld(leftDrivetrain), rd(rightDrivetrain), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
+Drivebase::Drivebase(vex::motor_group& leftMotors, vex::motor_group& rightMotors, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
+: ld(leftMotors), rd(rightMotors), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
   headingPID(0.5, 0.0001, 25, 10, true),
   fancyDrivePID(1, 0, 0, 40), // 40ms because of gps refresh rate
   drivePID(0.8, 0, 0, 10) {}
 
-void Drivebase::drive(directionType direction, double inches, int velocityPercent){
+void Drivebase::drive(directionType direction, double inches, int velocityPercent) {
 
-  double motorDegrees = inches / (INCH_CONVERSION); // 0.018 as a backup
+  double motorDegrees = inches / (INCH_CONVERSION);
 
   ld.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct, false);
   rd.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct);
+
+  ld.stop(brake);
+  rd.stop(brake);
 }
 
 void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllowed, int recursions, double minimumSpeed) {
@@ -47,7 +50,6 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
       ld.spin(fwd, change, pct);
       rd.spin(reverse, change, pct);
 
-      // Check for completion of the tick loop
       if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
           (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
           (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){
@@ -58,8 +60,8 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
       wait(10, msec); 
     }
 
-    ld.stop(brake);
-    rd.stop(brake);
+    ld.stop(hold);
+    rd.stop(hold);
     headingPID.reset();
 
     // In case drivetrain is still in motion and moves away from setpoint
@@ -67,7 +69,6 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
 
     currentAngle = inert.heading();
 
-    // Check if desired angle was achieved
     if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
         (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
         (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){
@@ -140,7 +141,7 @@ void Drivebase::driveTo(vex::directionType direction, double desiredInches, doub
   }
 }
 
-void Drivebase::posDriveTo(double desiredX, double desiredY, double precision, double secondsAllowed, int recursions) {
+void Drivebase::driveTo(double desiredX, double desiredY, double precision, double secondsAllowed, int recursions) {
 
   // Calculate the angle
   // pv = sqrt((y2 - y1)^2 + (x2 - x1)^2)
@@ -152,7 +153,7 @@ void Drivebase::posDriveTo(double desiredX, double desiredY, double precision, d
   fancyDrivePID.reset();
 }
 
-double Drivebase::get_x() const {
+double Drivebase::getX() const {
   
   double theta = 180 - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - (inert.heading() * M_PI / 180);
   double deltaX = cos(theta) * sqrt(X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES + Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES);
@@ -160,7 +161,7 @@ double Drivebase::get_x() const {
   return (gps.xPosition(distanceUnits::in) + deltaX);
 }
 
-double Drivebase::get_y() const {
+double Drivebase::getY() const {
 
   double theta = 180 - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - (inert.heading() * M_PI / 180);
   double deltaY = sin(theta) * sqrt(X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES + Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES);
@@ -193,10 +194,10 @@ void Drivebase::renderRobot() {
   constexpr int VECTOR_LENGTH_PIXELS = 40;
 
   double angle = inert.heading() * M_PI / 180;
-  double x = get_x() * 5/3; // Convert inches to pixels
+  double x = getX() * 5/3; // Convert inches to pixels
   double x_gps = gps.xPosition(distanceUnits::in) * 5/3;
   double x2 = x + cos(angle) * VECTOR_LENGTH_PIXELS;
-  double y = get_y() * 5/3;
+  double y = getY() * 5/3;
   double y_gps = gps.yPosition(distanceUnits::in) * 5/3;
   double y2 = y + sin(angle) * VECTOR_LENGTH_PIXELS;
 

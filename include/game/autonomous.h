@@ -7,28 +7,30 @@
 namespace auton {
 
   /**
-   * @brief Blue left side game autonomous
+   * @brief Left side game autonomous
    * 
    */
-  void blueLeft();
+  void left();
 
   /**
-   * @brief Blue right side game autonomous
+   * @brief Right side game autonomous
    * 
    */
-  void blueRight();
+  void right();
 
   /**
-   * @brief Red left side game autonomous
+   * @brief Solo winpoint
+   * @warning Not complete!
    * 
    */
-  void redLeft();
+  void winpoint();
 
   /**
-   * @brief Red right side game autonomous
+   * @brief Drive forwards 2 inches 
+   * @note Used when our alliance partner has a solo winpoint
    * 
    */
-  void redRight();
+  void twoInch();
 
   /**
    * @brief Skills competition autonomous

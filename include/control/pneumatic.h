@@ -13,6 +13,7 @@ class Pneumatic {
     vex::digital_out solenoid;
     bool reversed;
     uint32_t toggleCooldownTime;
+    unsigned int clickCooldown;
   public:
   
     /**
@@ -20,8 +21,9 @@ class Pneumatic {
      * 
      * @param solenoidPort Pneumatic 3 wire port
      * @param reverse Set to true to reverse the pneumatic values
+     * @param cooldown Set the number of ms for which a toggle will be ignored (try 200 if it spam fires)
      */
-    Pneumatic(vex::triport::port& solenoidPort, bool reverse = false);
+    Pneumatic(vex::triport::port& solenoidPort, bool reverse = false, unsigned int cooldown = 0);
 
     /**
      * @brief Returns the current pneumatic value
@@ -44,4 +46,11 @@ class Pneumatic {
      * @param value true means extended, false means retracted
      */
     void setTo(const bool value);
+
+    /**
+     * @brief Change the pneumatic toggle cooldown
+     * 
+     * @param cooldown in ms
+     */
+    void setCooldown(const unsigned int cooldown);
 };

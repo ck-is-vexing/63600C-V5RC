@@ -1,4 +1,4 @@
-#include "game/preAuton.h"
+#include "game/pre-auton.h"
 #include "game/autonomous.h"
 #include "game/driver.h"
 #include "robot-config.h"
@@ -11,7 +11,17 @@ competition Competition;
 void pre_auton(void) {
   printl("Pre-Auton Init");
 
-  //preAuton::autonSelector();
+  vexcodeInit();
+  driver::registerEvents();
+
+  intakeLower.setVelocity(100, pct);
+  intakeUpper.setVelocity(100, pct);
+  intakeBack.setVelocity(100, pct);
+  leftDrive.setStopping(coast);
+  rightDrive.setStopping(coast);
+  redirect.setTo(true);
+
+  preAuton::autonSelector();
 
   if (global::gpsAllowed == true) {
     // Wait a short period to allow GPS to register field strips
@@ -24,42 +34,33 @@ void pre_auton(void) {
 
   } else {
     // Manual backup in case there aren't GPS strips
-    Inertial.calibrate();
-    while (Inertial.isCalibrating()) { wait(100,msec); }
-    Inertial.setHeading(preAuton::inertialAngle, deg);
+    imu.calibrate();
+    while (imu.isCalibrating()) { wait(50, msec); }
+    imu.setHeading(preAuton::inertialAngle, deg);
 
     Controller1.Screen.setCursor(3, 1);
     Controller1.Screen.print("Inertial Calibrated!");
   }
-
-  intakeLower.setVelocity(100, pct);
-  intakeUpper.setVelocity(100, pct);
-  intakeBack.setVelocity(100, pct);
-
-  redirect.setTo(true);
-
-  leftDrive.setStopping(coast);
-  rightDrive.setStopping(coast);
-
-  vexcodeInit();
 }
 
 /// Run during match autonomous
 void autonomous(void) {
   printl("Auton Init");
 
+  wing.setTo(true); // So it doesn't get stuck on things
+
   switch (preAuton::autonSelection) {
-    case global::autonomousTypes::RED_LEFT:
-      auton::redLeft();
+    case global::autonomousTypes::LEFT:
+      auton::left();
       break;
-    case global::autonomousTypes::RED_RIGHT:
-      auton::redRight();
+    case global::autonomousTypes::RIGHT:
+      auton::right();
       break;
-    case global::autonomousTypes::BLUE_LEFT:
-      auton::blueLeft();
+    case global::autonomousTypes::WINPOINT:
+      auton::winpoint();
       break;
-    case global::autonomousTypes::BLUE_RIGHT:
-      auton::blueRight();
+    case global::autonomousTypes::TWO_INCH:
+      auton::twoInch();
       break;
     case global::autonomousTypes::SKILLS:
       auton::skills();
@@ -82,31 +83,33 @@ void usercontrol(void) {
   rightDrive.spin(fwd, 0, pct);
 
   while (true == true /* A statement that is true */) { 
-    
+
     // Manual autonomous trigger used for testing
     if (Controller1.ButtonX.pressing() && global::debugMode == true){
-
-      /*switch (preAuton::autonSelection) {
-        case global::autonomousTypes::RED_LEFT:
-          auton::redLeft();
+      //auton::PIDTest();
+      wing.setTo(true); // So it doesn't get stuck on things
+      
+      switch (preAuton::autonSelection) {
+        case global::autonomousTypes::LEFT:
+          auton::left();
           break;
-        case global::autonomousTypes::RED_RIGHT:
-          auton::redRight();
+        case global::autonomousTypes::RIGHT:
+          auton::right();
           break;
-        case global::autonomousTypes::BLUE_LEFT:
-          auton::blueLeft();
+        case global::autonomousTypes::WINPOINT:
+          auton::winpoint();
           break;
-        case global::autonomousTypes::BLUE_RIGHT:
-          auton::blueRight();
+        case global::autonomousTypes::TWO_INCH:
+          auton::twoInch();
           break;
         case global::autonomousTypes::SKILLS:
           auton::skills();
           break;
         case global::autonomousTypes::NONE:
           break;
-      }*/
-      auton::redRight();
-      
+      }
+
+      wait(5, sec);
       leftDrive.spin(fwd, 0, pct);
       rightDrive.spin(fwd, 0, pct);
     }
@@ -116,7 +119,7 @@ void usercontrol(void) {
   }
 }
 
-/// Set up callbacks and run pre-auton
+/// Set up game calls and run pre-auton
 int main() {
 
   Competition.autonomous(autonomous);

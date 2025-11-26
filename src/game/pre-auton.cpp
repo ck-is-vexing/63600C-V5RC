@@ -1,8 +1,9 @@
-#include "game/preAuton.h"
+#include "game/pre-auton.h"
 #include "robot-config.h"
 #include "func/button.h"
+#include "definition.h"
 
-int preAuton::gpsBlueAngle = 90;
+int preAuton::sideAngle = 180;
 int preAuton::inertialAngle = 0;
 global::autonomousTypes preAuton::autonSelection = global::autonomousTypes::NONE;
 
@@ -11,20 +12,20 @@ void preAuton::autonSelector() {
 
   constexpr unsigned int MAX_SECONDS = 30;
 
-  Button redLeft = Button(10, 10, 110, 110, "Red Left", red, white, Brain);
-  Button redRight = Button(120, 10, 220, 110, "Red Right", red, white, Brain);
-  Button blueLeft = Button(10, 120, 110, 220, "Blue Left", blue, white, Brain);
-  Button blueRight = Button(120, 120, 220, 220, "Blue Right", blue, white, Brain);
-  Button skills = Button(230, 120, 330, 220, "Skills (Red Left)", orange, white, Brain);
+  Button left = Button(10, 10, 110, 110, "Left", red, white, Brain);
+  Button right = Button(120, 10, 220, 110, "Right", red, white, Brain);
+  Button winpoint = Button(10, 120, 110, 220, "Solo Winpoint", blue, white, Brain);
+  Button twoInch = Button(120, 120, 220, 220, "Two Inch", blue, white, Brain);
+  Button skills = Button(230, 120, 330, 220, "Skills", orange, white, Brain);
   Button noAuton = Button(230, 10, 330, 110, "No Auton", orange, white, Brain);
   Button decreaseAngle = Button(340, 120, 400, 180, "<", green, white, Brain);
   Button increaseAngle = Button(410, 120, 470, 180, ">", green, white, Brain);
 
   Brain.Screen.clearScreen();
-  redLeft.render();
-  redRight.render();
-  blueLeft.render();
-  blueRight.render();
+  left.render();
+  right.render();
+  winpoint.render();
+  twoInch.render();
   skills.render();
   noAuton.render();
   decreaseAngle.render();
@@ -32,39 +33,39 @@ void preAuton::autonSelector() {
 
   Brain.Screen.setPenColor(white);
   Brain.Screen.setCursor(2, 34);
-  Brain.Screen.print("Blue Side Angle:");
+  Brain.Screen.print("Your Side Angle:");
   Brain.Screen.setCursor(3, 39);
-  Brain.Screen.print(90);
+  Brain.Screen.print(preAuton::sideAngle);
 
-  int t = 0;  
+  unsigned int t = 0;  
   while (true) {
 
-    if (redLeft.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::RED_LEFT;
+    if (left.isClicked() == true) {
+      preAuton::autonSelection = global::autonomousTypes::LEFT;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
-      Brain.Screen.printAt(10, 20, "Red Left Selected");
+      Brain.Screen.printAt(10, 20, "Left Selected");
       break;
 
-    } else if (redRight.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::RED_RIGHT;
+    } else if (right.isClicked() == true) {
+      preAuton::autonSelection = global::autonomousTypes::RIGHT;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
-      Brain.Screen.printAt(10, 20, "Red Right Selected");
+      Brain.Screen.printAt(10, 20, "Right Selected");
       break;
 
-    } else if (blueLeft.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::BLUE_LEFT;
+    } else if (winpoint.isClicked() == true) {
+      preAuton::autonSelection = global::autonomousTypes::WINPOINT;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
-      Brain.Screen.printAt(10, 20, "Blue Left Selected");
+      Brain.Screen.printAt(10, 20, "Winpoint Selected");
       break;
 
-    } else if (blueRight.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::BLUE_RIGHT;
+    } else if (twoInch.isClicked() == true) {
+      preAuton::autonSelection = global::autonomousTypes::TWO_INCH;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
-      Brain.Screen.printAt(10, 20, "Blue Right Selected");
+      Brain.Screen.printAt(10, 20, "Two Inch Selected");
       break;
 
     } else if (skills.isClicked() == true) {
@@ -80,19 +81,25 @@ void preAuton::autonSelector() {
       break;
 
     } else if (decreaseAngle.isClicked() == true) {
-      preAuton::gpsBlueAngle -= 90;
-      Brain.Screen.setPenColor(white);
+      preAuton::sideAngle -= 90;
       Brain.Screen.clearLine(3);
+      left.render();
+      right.render();
+      noAuton.render();
+      Brain.Screen.setPenColor(white);
       Brain.Screen.setCursor(3, 39);
-      Brain.Screen.print(preAuton::gpsBlueAngle);
+      Brain.Screen.print(preAuton::sideAngle);
       wait(300, msec);
 
     } else if (increaseAngle.isClicked() == true) {
-      preAuton::gpsBlueAngle += 90;
-      Brain.Screen.setPenColor(white);
+      preAuton::sideAngle += 90;
       Brain.Screen.clearLine(3);
+      left.render();
+      right.render();
+      noAuton.render();
+      Brain.Screen.setPenColor(white);
       Brain.Screen.setCursor(3, 39);
-      Brain.Screen.print(preAuton::gpsBlueAngle);
+      Brain.Screen.print(preAuton::sideAngle);
       wait(300, msec);
     }
 
@@ -114,10 +121,12 @@ void preAuton::inertialGPSCalibrate(double averageSeconds) {
   double averagedHeading = 0;
   int i;
 
+  printl("GPS Quality: " << GPS.quality());
+
   // Sum of GPS angles
   for(i = 0; i < (averageSeconds * 25) + 1; i++) {
 
-    averagedHeading += (GPS.heading() - preAuton::gpsBlueAngle + 90);
+    averagedHeading += (GPS.heading() - preAuton::sideAngle);
     wait(40, msec); // Update frequency of GPS sensor
   }
 
@@ -134,9 +143,9 @@ void preAuton::inertialGPSCalibrate(double averageSeconds) {
   Controller1.Screen.setCursor(3, 1);
   Controller1.Screen.print("Calibrating...");
 
-  Inertial.calibrate();
-  while (Inertial.isCalibrating()) { wait(100,msec); }
-  Inertial.setHeading(averagedHeading, deg);
+  imu.calibrate();
+  while (imu.isCalibrating()) { wait(100,msec); }
+  imu.setHeading(averagedHeading, deg);
 
   Controller1.Screen.clearLine(3);
   Controller1.Screen.setCursor(3, 1);

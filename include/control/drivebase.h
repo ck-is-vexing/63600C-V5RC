@@ -25,13 +25,13 @@ class Drivebase {
     /**
      * @brief Construct a new drivebase
      * 
-     * @param leftDrivetrain Motor group for left side of drivetrain
-     * @param rightDrivetrain Motor group for right side of drivetrain
+     * @param leftMotors Motor group for left side of drivebase
+     * @param rightMotors Motor group for right side of drivebase
      * @param robotBrain VEX brain object
      * @param inertialSensor VEX inertial sensor object
      * @param GPSSensor VEX gps sensor object
      */
-    Drivebase(vex::motor_group& leftDrivetrain, vex::motor_group& rightDrivetrain, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor);
+    Drivebase(vex::motor_group& leftMotors, vex::motor_group& rightMotors, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor);
 
     /**
      * @brief Move the drivebase forwards or backwards a set number of inches
@@ -72,7 +72,7 @@ class Drivebase {
      * @param recursions Maximum number of individual attempts
      * @param minSpeed Lowest percentage speed the drivetrain will move at
      */
-    void driveTo(vex::directionType direction, double desiredInches, double desiredAngle, double precision = 0.1, double secondsAllowed = 10, int recursions = 5, double minSpeed = 1.0);
+    void driveTo(vex::directionType direction, double desiredInches, double desiredAngle, double precision = 0.5, double secondsAllowed = 10, int recursions = 5, double minSpeed = 1.0);
 
     /**
      * @brief Drive the robot to precise coordinates on the field
@@ -84,21 +84,21 @@ class Drivebase {
      * @param secondsAllowed Maximum time to recursively drive
      * @param recursions Maximum number of individual attempts
      */
-    void posDriveTo(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 10, int recursions = 5);
+    void driveTo(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 10, int recursions = 5);
 
     /**
      * @brief Returns the X coordinate of the robot center, in inches
      * 
      * @return double 
      */
-    double get_x() const;
+    double getX() const;
 
     /**
      * @brief Returns the Y coordinate of the robot center, in inches
      * 
      * @return double 
      */
-    double get_y() const;
+    double getY() const;
 
     /**
      * @brief Renders an approximation of the robot position on Brain screen

@@ -14,7 +14,7 @@ namespace preAuton {
    * @note Should be 90 for a correctly set up field 
    *
    */
-  extern int gpsBlueAngle;
+  extern int sideAngle;
   
   /**
    * @brief enum instance for selecting auton

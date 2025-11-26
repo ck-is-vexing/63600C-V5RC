@@ -8,6 +8,12 @@
 namespace driver {
 
   /**
+   * @brief Register driver functions called on button presses
+   * 
+   */
+  void registerEvents();
+
+  /**
    * @brief Check controller inputs and respond accordingly
    * 
    */

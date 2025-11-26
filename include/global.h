@@ -17,9 +17,9 @@ namespace global {
   enum class autonomousTypes {
     NONE,
     SKILLS,
-    RED_LEFT,
-    RED_RIGHT,
-    BLUE_LEFT,
-    BLUE_RIGHT
+    LEFT,
+    RIGHT,
+    WINPOINT,
+    TWO_INCH
   };
 }

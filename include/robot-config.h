@@ -2,8 +2,9 @@
 
 #include "vex.h"
 #include "control/drivebase.h"
-#include "control/ccurve.h"
 #include "control/pneumatic.h"
+#include "control/curves.h"
+#include "control/rapid-trigger.h"
 
 using namespace vex;
 
@@ -32,10 +33,11 @@ extern motor hopper;
 // Pneumatics
 extern Pneumatic redirect;
 extern Pneumatic matchLoadMech;
+extern Pneumatic wing;
 
 // Other Sensors
 extern gps GPS;
-extern inertial Inertial;
+extern inertial imu;
 
 // Drivetrain
 extern Drivebase bot;
