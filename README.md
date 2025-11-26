@@ -1,7 +1,4 @@
-63600C V5RC Push Back 2025/2026 Repository
-DO NOT SHARE OUTSIDE TEAM 63600C
+63600C XXXX Xxxx Xxxx 2025/2026 Repository
 
-The code in this repository is used for competitive VEX Robotics,
-which you should know if you have access.
-
-Yes, I just wanted to add a README file...
+The code in this repository is used for competitive XXX Xxxxxxxx.
+Censored to avoid showing up in Web Search Results. Plagiarism is a significant problem right now in XXX Xxxxxxxx.
