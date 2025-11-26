@@ -5,7 +5,7 @@
 
 int preAuton::sideAngle = 180;
 int preAuton::inertialAngle = 0;
-global::autonomousTypes preAuton::autonSelection = global::autonomousTypes::NONE;
+autonomousTypes preAuton::autonSelection = autonomousTypes::NONE;
 
 
 void preAuton::autonSelector() {
@@ -41,41 +41,41 @@ void preAuton::autonSelector() {
   while (true) {
 
     if (left.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::LEFT;
+      preAuton::autonSelection = autonomousTypes::LEFT;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Left Selected");
       break;
 
     } else if (right.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::RIGHT;
+      preAuton::autonSelection = autonomousTypes::RIGHT;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Right Selected");
       break;
 
     } else if (winpoint.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::WINPOINT;
+      preAuton::autonSelection = autonomousTypes::WINPOINT;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Winpoint Selected");
       break;
 
     } else if (twoInch.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::TWO_INCH;
+      preAuton::autonSelection = autonomousTypes::TWO_INCH;
       preAuton::inertialAngle = 0;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Two Inch Selected");
       break;
 
     } else if (skills.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::SKILLS;
+      preAuton::autonSelection = autonomousTypes::SKILLS;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Skills Selected");
       break;
 
     } else if (noAuton.isClicked() == true) {
-      preAuton::autonSelection = global::autonomousTypes::NONE;
+      preAuton::autonSelection = autonomousTypes::NONE;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Cancelled");
       break;
@@ -105,7 +105,7 @@ void preAuton::autonSelector() {
 
 
     if (t > (MAX_SECONDS * 50)) {
-      preAuton::autonSelection = global::autonomousTypes::NONE;
+      preAuton::autonSelection = autonomousTypes::NONE;
       Brain.Screen.clearScreen();
       Brain.Screen.printAt(10, 20, "Autonomous Aborted!");
       break;

@@ -6,6 +6,8 @@ void driver::registerEvents() {
   Controller1.ButtonY.pressed(    []() { matchLoadMech.toggle(true); });
   Controller1.ButtonB.pressed(    []() { redirect.toggle(true);      });
   Controller1.ButtonRight.pressed([]() { wing.toggle(true);          });
+
+  Controller1.ButtonLeft.pressed( []() { intake::preload();          });
 }
 
 void driver::checkInputs() {

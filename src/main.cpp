@@ -2,6 +2,8 @@
 #include "game/autonomous.h"
 #include "game/driver.h"
 #include "robot-config.h"
+#include "control/intake.h"
+#include "global.h"
 #include "definition.h"
 
 using namespace vex;
@@ -20,6 +22,8 @@ void pre_auton(void) {
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
   redirect.setTo(true);
+
+  intakeColor.setLight(ledState::on);
 
   preAuton::autonSelector();
 
@@ -50,23 +54,12 @@ void autonomous(void) {
   wing.setTo(true); // So it doesn't get stuck on things
 
   switch (preAuton::autonSelection) {
-    case global::autonomousTypes::LEFT:
-      auton::left();
-      break;
-    case global::autonomousTypes::RIGHT:
-      auton::right();
-      break;
-    case global::autonomousTypes::WINPOINT:
-      auton::winpoint();
-      break;
-    case global::autonomousTypes::TWO_INCH:
-      auton::twoInch();
-      break;
-    case global::autonomousTypes::SKILLS:
-      auton::skills();
-      break;
-    case global::autonomousTypes::NONE:
-      break;
+    case autonomousTypes::LEFT:     auton::left();
+    case autonomousTypes::RIGHT:    auton::right();
+    case autonomousTypes::WINPOINT: auton::winpoint();
+    case autonomousTypes::TWO_INCH: auton::twoInch();
+    case autonomousTypes::SKILLS:   auton::skills();
+    case autonomousTypes::NONE:     break;
   }
 }
 
@@ -90,29 +83,26 @@ void usercontrol(void) {
       wing.setTo(true); // So it doesn't get stuck on things
       
       switch (preAuton::autonSelection) {
-        case global::autonomousTypes::LEFT:
-          auton::left();
-          break;
-        case global::autonomousTypes::RIGHT:
-          auton::right();
-          break;
-        case global::autonomousTypes::WINPOINT:
-          auton::winpoint();
-          break;
-        case global::autonomousTypes::TWO_INCH:
-          auton::twoInch();
-          break;
-        case global::autonomousTypes::SKILLS:
-          auton::skills();
-          break;
-        case global::autonomousTypes::NONE:
-          break;
+        case autonomousTypes::LEFT:     auton::left();
+        case autonomousTypes::RIGHT:    auton::right();
+        case autonomousTypes::WINPOINT: auton::winpoint();
+        case autonomousTypes::TWO_INCH: auton::twoInch();
+        case autonomousTypes::SKILLS:   auton::skills();
+        case autonomousTypes::NONE:     break;
       }
 
       wait(5, sec);
       leftDrive.spin(fwd, 0, pct);
       rightDrive.spin(fwd, 0, pct);
     }
+
+    /*if (intake::isActive) {
+      switch (intakeColor.getBlock()) {
+        case colorType::NONE: printl( "NONE" );
+        case colorType::RED:  printl( "RED"  );
+        case colorType::BLUE: printl( "BLUE" );
+      }
+    }*/
 
     driver::checkInputs();
     wait(20, msec);

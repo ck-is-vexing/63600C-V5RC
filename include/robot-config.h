@@ -3,6 +3,7 @@
 #include "vex.h"
 #include "control/drivebase.h"
 #include "control/pneumatic.h"
+#include "control/color-sensor.h"
 #include "control/curves.h"
 #include "control/rapid-trigger.h"
 
@@ -35,9 +36,10 @@ extern Pneumatic redirect;
 extern Pneumatic matchLoadMech;
 extern Pneumatic wing;
 
-// Other Sensors
+// Sensors
 extern gps GPS;
 extern inertial imu;
+extern ColorSensor intakeColor;
 
 // Drivetrain
 extern Drivebase bot;

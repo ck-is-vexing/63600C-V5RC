@@ -20,7 +20,7 @@ namespace preAuton {
    * @brief enum instance for selecting auton
    * 
    */
-  extern global::autonomousTypes autonSelection;
+  extern autonomousTypes autonSelection;
 
   /**
    * @brief Starting angle of the robot. Used when GPS is disabled

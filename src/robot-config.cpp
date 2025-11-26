@@ -28,9 +28,10 @@ Pneumatic redirect = Pneumatic(Brain.ThreeWirePort.D, true);
 Pneumatic matchLoadMech = Pneumatic(Brain.ThreeWirePort.B);
 Pneumatic wing = Pneumatic(Brain.ThreeWirePort.C);
 
-// Other Sensors
+// Sensors
 gps GPS = gps(PORT7, 359);
 inertial imu = inertial(PORT6);
+ColorSensor intakeColor = ColorSensor(PORT8);
 
 // 6m Drivetrain init
 Drivebase bot = Drivebase(leftDrive, rightDrive, Brain, imu, GPS);
