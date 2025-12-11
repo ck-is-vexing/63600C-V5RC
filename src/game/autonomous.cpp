@@ -52,12 +52,17 @@ void auton::left() {
   matchLoadMech.setTo(true);
   bot.turnTo(223, 2);
 
-  bot.drive(fwd, 12, 40);
+  bot.drive(fwd, 11, 40); //11
+
+  leftDrive.stop(brake);
+  rightDrive.stop(brake);
 
   intakeLower.spin(fwd, 100, pct);
   intakeBack.spin(fwd, 100, pct);
   intakeUpper.spin(reverse, 100, pct);
   hopper.spin(fwd, 100, pct);  
+
+  wait(5, sec);
 }
 
 void auton::right() {
@@ -206,7 +211,7 @@ void auton::skills() {
   //intakeBack.stop(coast);
   //intakeUpper.stop(coast);
 
-  bot.turnTo(178);
+  bot.turnTo(180);
   bot.drive(fwd, 12.5, 20);
 
   redirect.setTo(false);

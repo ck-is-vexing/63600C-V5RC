@@ -1,5 +1,6 @@
 #include "control/intake.h"
 #include "definition.h"
+#include "global.h"
 
 bool intake::isActive = false;
 bool intake::isPreloading = false;
@@ -7,13 +8,14 @@ bool intake::isPreloading = false;
 using namespace vex;
 
 namespace {
-  int endPreload() {
-    printl("Thread Starting!");
+  
+  /// @brief Thread function which detects the end of preloading blocks into the intake
+  int preloadThread() {
+    printl("Preload Thread Init");
 
     while (true) {
 
       if (intakeColor.isNearObject()) {
-        
         intakeLower.stop(brake);
         intakeBack.stop(brake);
         intakeUpper.stop(brake);
@@ -26,10 +28,49 @@ namespace {
         break;
       }
 
+      // Failsafe exit
+      if (Controller1.ButtonL1.pressing() || Controller1.ButtonL2.pressing() || Controller1.ButtonR1.pressing() || Controller1.ButtonR2.pressing()) {
+        intakeLower.stop(brake);
+        intakeBack.stop(brake);
+        intakeUpper.stop(brake);
+        hopper.stop(brake);
+
+        intakeColor.integrationTime(103);
+        
+        intake::isPreloading = false;
+        break;
+      }
+
       this_thread::sleep_for(25);
     }
 
     printl("Thread Exiting!");
+    return 0;
+  }
+
+  /// @brief Thread function which adjusts the intake according to the color of blocks traveling through it
+  int colorSortThread() {
+    printl("Color Sort Thread Init");
+
+    colorType colorToRemove;
+
+    if (global::yourColor == colorType::BLUE) {
+      colorToRemove = colorType::RED;
+    } else {
+      colorToRemove = colorType::BLUE;
+    }
+
+    while (true) {
+
+      if (intake::isActive && intakeColor.getBlock() == colorToRemove) {
+        redirect.toggle(true);
+        this_thread::sleep_for(150);
+        redirect.toggle(false);
+      }
+
+      this_thread::sleep_for(25);
+    }
+
     return 0;
   }
 }
@@ -44,7 +85,11 @@ void intake::preload() {
   intakeUpper.spin(fwd, 10, pct);
   hopper.spin(fwd, 100, pct);
 
-  thread preloadChecker = thread(endPreload);
+  thread preloadChecker = thread(preloadThread);
+}
+
+void intake::initSorting() {
+  thread colorSort = thread(colorSortThread);
 }
 
 void intake::scoreLongGoal(const int speedPercent) {

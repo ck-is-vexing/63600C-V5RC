@@ -9,6 +9,8 @@
 using namespace vex;
 competition Competition;
 
+bool preAutonCompletion = false;
+
 /// Run before match begins
 void pre_auton(void) {
   printl("Pre-Auton Init");
@@ -45,6 +47,8 @@ void pre_auton(void) {
     Controller1.Screen.setCursor(3, 1);
     Controller1.Screen.print("Inertial Calibrated!");
   }
+
+  preAutonCompletion = true;
 }
 
 /// Run during match autonomous
@@ -65,6 +69,14 @@ void autonomous(void) {
 
 /// Run during match driver control
 void usercontrol(void) {
+
+  if (!preAutonCompletion) {
+    while (true) {
+      if (preAutonCompletion) { break; }
+      wait (100, msec);
+    }
+  }
+
   printl("Driver Init");
 
   // Intake failsafe
@@ -74,6 +86,8 @@ void usercontrol(void) {
   
   leftDrive.spin(fwd, 0, pct);
   rightDrive.spin(fwd, 0, pct);
+
+  intake::initSorting();
 
   while (true == true /* A statement that is true */) { 
 
@@ -90,19 +104,11 @@ void usercontrol(void) {
         case autonomousTypes::SKILLS:   auton::skills();
         case autonomousTypes::NONE:     break;
       }
-
+      
       wait(5, sec);
       leftDrive.spin(fwd, 0, pct);
       rightDrive.spin(fwd, 0, pct);
     }
-
-    /*if (intake::isActive) {
-      switch (intakeColor.getBlock()) {
-        case colorType::NONE: printl( "NONE" );
-        case colorType::RED:  printl( "RED"  );
-        case colorType::BLUE: printl( "BLUE" );
-      }
-    }*/
 
     driver::checkInputs();
     wait(20, msec);

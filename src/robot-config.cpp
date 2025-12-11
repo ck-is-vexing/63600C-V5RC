@@ -21,7 +21,7 @@ motor intakeLower = motor(PORT1, ratio18_1); // 5.5W
 motor intakeBack = motor(PORT4, ratio18_1, true); //  5.5W
 
 // Hopper motor
-motor hopper = motor(PORT2, ratio18_1, true); // 5.5W
+motor hopper = motor(PORT2, ratio18_1); // 5.5W
 
 // Pneumatics
 Pneumatic redirect = Pneumatic(Brain.ThreeWirePort.D, true);

@@ -1,5 +1,4 @@
 #include "control/pneumatic.h"
-#include "definition.h"
 
 Pneumatic::Pneumatic(vex::triport::port& solenoidPort, bool reverse, unsigned int cooldown)
 : solenoid(vex::digital_out(solenoidPort)), reversed(reverse), toggleCooldownTime(0), clickCooldown(cooldown) {}

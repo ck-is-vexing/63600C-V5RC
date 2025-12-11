@@ -32,4 +32,7 @@ namespace global {
 
   /// Declare whether the field has GPS strips
   extern const bool gpsAllowed;
+
+  /// Declare your alliance's color
+  extern colorType  yourColor;
 }

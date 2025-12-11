@@ -23,6 +23,12 @@ namespace intake {
   void preload();
 
   /**
+   * @brief Initialize automatic color-based block sorting
+   * 
+   */
+  void initSorting();
+
+  /**
    * @brief Spin the intake to score in the long goal
    * 
    * @param speedPercent Intake motor speed percentage
@@ -33,8 +39,8 @@ namespace intake {
    * @brief Spin the intake to score in the center goal
    * 
    * @param generalSpeedPercent Intake motor general speed percentage
-   * @param topSpeedPercent Set slower than generalSpeedPercent to not shoot blocks through the middle goal
-   * @param toggleMatchLoader True will lower the match loader (so it doesn't get in the way)
+   * @param topSpeedPercent     Set slower than generalSpeedPercent to not shoot blocks through the middle goal
+   * @param toggleMatchLoader   True will lower the match loader (so it doesn't get in the way)
    */
   void scoreCenterGoal(const int generalSpeedPercent, const int topSpeedPercent, const bool toggleMatchLoader = false);
 
