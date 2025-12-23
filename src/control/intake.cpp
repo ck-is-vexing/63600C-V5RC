@@ -3,28 +3,28 @@
 #include "global.h"
 
 bool intake::isActive = false;
-bool intake::isPreloading = false;
 
 using namespace vex;
 
 namespace {
   
+  bool isPreloading = false;
+  bool isSorting = false;
+
   /// @brief Thread function which detects the end of preloading blocks into the intake
   int preloadThread() {
     printl("Preload Thread Init");
 
     while (true) {
 
-      if (intakeColor.isNearObject()) {
+      if (preloadColor.isNearObject()) {
         intakeLower.stop(brake);
         intakeBack.stop(brake);
         intakeUpper.stop(brake);
         hopper.stop(brake);
 
-        intakeColor.integrationTime(103);
-
         this_thread::sleep_for(100);
-        intake::isPreloading = false;
+        isPreloading = false;
         break;
       }
 
@@ -34,10 +34,8 @@ namespace {
         intakeBack.stop(brake);
         intakeUpper.stop(brake);
         hopper.stop(brake);
-
-        intakeColor.integrationTime(103);
         
-        intake::isPreloading = false;
+        isPreloading = false;
         break;
       }
 
@@ -62,11 +60,18 @@ namespace {
 
     while (true) {
 
-      if (intake::isActive && intakeColor.getBlock() == colorToRemove) {
-        redirect.toggle(true);
-        this_thread::sleep_for(150);
-        redirect.toggle(false);
+      if (intake::isActive && sortColor.getBlock() == colorToRemove && !isPreloading) {
+        isSorting = true;
+
+        redirect.setTo(true);
+        this_thread::sleep_for(250);
+        redirect.setTo(false);
+
+        isSorting = false;
       }
+      
+      // Sort cancellation
+      if (Controller2.ButtonA.pressing()) { break; }
 
       this_thread::sleep_for(25);
     }
@@ -76,9 +81,7 @@ namespace {
 }
 
 void intake::preload() {
-  intake::isPreloading = true;
-
-  intakeColor.integrationTime(25);
+  isPreloading = true;
 
   intakeLower.spin(fwd, 10, pct);
   intakeBack.spin(fwd, 15, pct);
@@ -93,7 +96,10 @@ void intake::initSorting() {
 }
 
 void intake::scoreLongGoal(const int speedPercent) {
-  redirect.setTo(false);
+
+  if (!isSorting) {
+    redirect.setTo(false);
+  }
 
   intakeLower.spin(fwd, speedPercent, pct);
   intakeBack.spin(fwd, speedPercent, pct);
@@ -126,7 +132,9 @@ void intake::scoreLowGoal(const int speedPercent) {
 }
 
 void intake::store(const int speedPercent) {
-  redirect.setTo(true);
+  if (!isSorting) {
+    redirect.setTo(true);
+  }
 
   intakeLower.spin(fwd, speedPercent, pct);
   intakeBack.spin(fwd, speedPercent, pct);

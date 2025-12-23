@@ -25,7 +25,10 @@ void pre_auton(void) {
   rightDrive.setStopping(coast);
   redirect.setTo(true);
 
-  intakeColor.setLight(ledState::on);
+  sortColor.setLight(ledState::on);
+  preloadColor.setLight(ledState::on);
+  sortColor.integrationTime(25);
+  preloadColor.integrationTime(25);
 
   preAuton::autonSelector();
 
@@ -87,8 +90,9 @@ void usercontrol(void) {
   leftDrive.spin(fwd, 0, pct);
   rightDrive.spin(fwd, 0, pct);
 
-  intake::initSorting();
-
+  //intake::initSorting();
+  
+  
   while (true == true /* A statement that is true */) { 
 
     // Manual autonomous trigger used for testing

@@ -3,10 +3,18 @@
 #include "control/intake.h"
 
 void driver::registerEvents() {
+
+  // Primary controller
   Controller1.ButtonY.pressed(     []() { matchLoadMech.toggle(true); });
   Controller1.ButtonDown.pressed(  []() { redirect.toggle(true);      });
   Controller1.ButtonRight.pressed( []() { wing.toggle(true);          });
   Controller1.ButtonB.pressed(     []() { intake::preload();          });
+
+  // Secondary controller
+  Controller2.ButtonL1.pressed(    []() { global::yourColor = colorType::BLUE; intake::initSorting(); });
+  Controller2.ButtonL2.pressed(    []() { global::yourColor = colorType::BLUE; intake::initSorting(); });
+  Controller2.ButtonR1.pressed(    []() { global::yourColor = colorType::RED;  intake::initSorting(); });
+  Controller2.ButtonR2.pressed(    []() { global::yourColor = colorType::RED;  intake::initSorting(); });
 }
 
 void driver::checkInputs() {

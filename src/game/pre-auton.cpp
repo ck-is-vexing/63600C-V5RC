@@ -42,7 +42,8 @@ void preAuton::autonSelector() {
     wait(20, msec);
   }
 
-
+  Brain.Screen.clearScreen();
+  wait(0.5, sec);
   // Select the autonomous -----------------------------------------------
 
   vex::color buttonColor;
@@ -57,7 +58,7 @@ void preAuton::autonSelector() {
 
   Button left          = Button(10,  10,  110, 110, "Left",          buttonColor, vex::white, Brain);
   Button right         = Button(120, 10,  220, 110, "Right",         buttonColor, vex::white, Brain);
-  Button winpoint      = Button(10,  120, 110, 220, "Solo Winpoint", buttonColor, vex::white, Brain);
+  Button winpoint      = Button(10,  120, 110, 220, "Winpoint", buttonColor, vex::white, Brain);
   Button twoInch       = Button(120, 120, 220, 220, "Two Inch",      buttonColor, vex::white, Brain);
   Button skills        = Button(230, 120, 330, 220, "Skills",        vex::orange, vex::white, Brain);
   Button noAuton       = Button(230, 10,  330, 110, "No Auton",      vex::orange, vex::white, Brain);

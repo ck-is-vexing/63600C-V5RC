@@ -11,6 +11,7 @@ using namespace vex;
 
 extern brain Brain;
 extern controller Controller1;
+extern controller Controller2;
 
 // Drivetrain motors
 extern motor leftBack;
@@ -39,7 +40,8 @@ extern Pneumatic wing;
 // Sensors
 extern gps GPS;
 extern inertial imu;
-extern ColorSensor intakeColor;
+extern ColorSensor sortColor;
+extern ColorSensor preloadColor;
 
 // Drivetrain
 extern Drivebase bot;

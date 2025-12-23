@@ -3,6 +3,7 @@ using namespace vex;
 
 brain Brain;
 controller Controller1 = controller(primary);
+controller Controller2 = controller(partner);
 
 // Drivetrain motors
 motor leftBack = motor(PORT13, ratio6_1, true);
@@ -31,7 +32,8 @@ Pneumatic wing = Pneumatic(Brain.ThreeWirePort.C);
 // Sensors
 gps GPS = gps(PORT7, 359);
 inertial imu = inertial(PORT6);
-ColorSensor intakeColor = ColorSensor(PORT8);
+ColorSensor sortColor = ColorSensor(PORT8);
+ColorSensor preloadColor = ColorSensor(PORT9);
 
 // 6m Drivetrain init
 Drivebase bot = Drivebase(leftDrive, rightDrive, Brain, imu, GPS);
