@@ -1,42 +1,53 @@
+#pragma once
+
+#include "vex.h"
+#include "control/drivebase.h"
+#include "control/pneumatic.h"
+#include "control/color-sensor.h"
+#include "control/curves.h"
+#include "control/rapid-trigger.h"
+
 using namespace vex;
 
 extern brain Brain;
 extern controller Controller1;
-
-
-/* Swerve:
-
-// Drivetrain motors
-extern motor swerveFrontLeft1;
-extern motor swerveFrontLeft2;
-extern motor swerveFrontRight1;
-extern motor swerveFrontRight2;
-extern motor swerveBackRight1;
-extern motor swerveBackRight2;
-extern motor swerveBackLeft1;
-extern motor swerveBackLeft2;
-
-// Drivetrain sensors
-extern rotation fL;
-extern rotation fR;
-extern rotation bR;
-extern rotation bL;
-*/
+extern controller Controller2;
 
 // Drivetrain motors
 extern motor leftBack;
+extern motor leftMiddle;
 extern motor leftFront;
-extern motor leftTop;
 extern motor_group leftDrive;
 
 extern motor rightBack;
+extern motor rightMiddle;
 extern motor rightFront;
-extern motor rightTop;
 extern motor_group rightDrive;
 
-// Other Sensors
-extern gps GPS;
-extern inertial Inertial;
+// Intake motors
+extern motor intakeUpper;
+extern motor intakeLower;
+extern motor intakeBack;
 
-// Thou shalt have a void
-void  vexcodeInit( void );
+// Hopper motor
+extern motor hopper;
+
+// Pneumatics
+extern Pneumatic redirect;
+extern Pneumatic matchLoadMech;
+extern Pneumatic wing;
+
+// Sensors
+extern gps GPS;
+extern inertial imu;
+extern ColorSensor sortColor;
+extern ColorSensor preloadColor;
+
+// Drivetrain
+extern Drivebase bot;
+
+// Rapid Trigger
+extern RapidTrigger leftJoystick;
+extern RapidTrigger rightJoystick;
+
+void vexcodeInit( void );
