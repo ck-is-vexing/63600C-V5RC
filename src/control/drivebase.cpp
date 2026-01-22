@@ -9,9 +9,6 @@ namespace {
   constexpr double GEAR_RATIO = 36.0 / 48.0;
 
   constexpr double INCH_CONVERSION = (M_PI * WHEEL_DIAMETER) * GEAR_RATIO / 360.0;
-
-  constexpr double X_OFFSET_GPS_INCHES = 2;
-  constexpr double Y_OFFSET_GPS_INCHES = -5.5;
 }
 
 Drivebase::Drivebase(vex::motor_group& leftMotors, vex::motor_group& rightMotors, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
@@ -151,78 +148,6 @@ void Drivebase::driveTo(double desiredX, double desiredY, double precision, doub
 
   headingPID.reset();
   fancyDrivePID.reset();
-}
-
-double Drivebase::getX() const {
-  
-  double theta = 180 - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - (inert.heading() * M_PI / 180);
-  double deltaX = cos(theta) * sqrt(X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES + Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES);
-
-  return (gps.xPosition(distanceUnits::in) + deltaX);
-}
-
-double Drivebase::getY() const {
-
-  double theta = 180 - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - (inert.heading() * M_PI / 180);
-  double deltaY = sin(theta) * sqrt(X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES + Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES);
-
-  return (gps.yPosition(distanceUnits::in) + deltaY);
-}
-
-void Drivebase::renderRobot() {
-  //TODO: Could the trig code be mixing up rad and deg?
-
-  // VEX Brain is 480x240p
-  // 20p = 1 foot
-  // GPS sensor (0,0) is at the center of the field
-  br.Screen.clearScreen();
-  br.Screen.setPenColor(white);
-  br.Screen.setPenWidth(2);
-
-  br.Screen.setFillColor(yellow);
-  br.Screen.drawCircle(120,120,8);
-
-  // Draw field
-  for(int x = 0; x <= 6; x++){
-    br.Screen.drawLine(x * 40, 0, x * 40, 240);
-  }
-  for(int y = 0; y <= 6; y++){
-    br.Screen.drawLine(0, y * 40, 240, y * 40);
-  }
-
-  // Draw robot vector
-  constexpr int VECTOR_LENGTH_PIXELS = 40;
-
-  double angle = inert.heading() * M_PI / 180;
-  double x = getX() * 5/3; // Convert inches to pixels
-  double x_gps = gps.xPosition(distanceUnits::in) * 5/3;
-  double x2 = x + cos(angle) * VECTOR_LENGTH_PIXELS;
-  double y = getY() * 5/3;
-  double y_gps = gps.yPosition(distanceUnits::in) * 5/3;
-  double y2 = y + sin(angle) * VECTOR_LENGTH_PIXELS;
-
-  br.Screen.setPenColor(blue);
-  br.Screen.setFillColor(blue);
-  br.Screen.drawCircle(x_gps, y_gps, 8);
-
-  br.Screen.setPenColor(red);
-  br.Screen.setFillColor(red);
-  br.Screen.setPenWidth(6);
-  br.Screen.drawCircle(x + 120, y + 120, 8);
-  br.Screen.drawLine(x + 120, y + 120, x2 + 120, y2 + 120);
-
-  br.Screen.setCursor(4, 30);
-  br.Screen.setPenColor(white);
-  br.Screen.setFillColor(black);
-  br.Screen.setPenWidth(1);
-  br.Screen.print("Angle: ");
-  br.Screen.print(angle);
-  br.Screen.setCursor(5, 30);
-  br.Screen.print("X: ");
-  br.Screen.print(x_gps);
-  br.Screen.setCursor(6, 30);
-  br.Screen.print("Y: ");
-  br.Screen.print(y_gps);
 }
 
 void Drivebase::demoTo(double desiredAngle) {

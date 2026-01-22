@@ -5,6 +5,7 @@
 #include "control/intake.h"
 #include "global.h"
 #include "definition.h"
+#include "control/pose.h"
 
 using namespace vex;
 competition Competition;
@@ -44,7 +45,7 @@ void pre_auton(void) {
   } else {
     // Manual backup in case there aren't GPS strips
     imu.calibrate();
-    while (imu.isCalibrating()) { wait(50, msec); }
+    while ( imu.isCalibrating() ) { wait(50, msec); }
     imu.setHeading(preAuton::inertialAngle, deg);
 
     Controller1.Screen.setCursor(3, 1);
@@ -73,6 +74,8 @@ void autonomous(void) {
 /// Run during match driver control
 void usercontrol(void) {
 
+  // If commented out, it's due to risk in matches of not being able to drive
+  // This should only affect practice, but it's better safe than sorry
   if (!preAutonCompletion) {
     while (true) {
       if (preAutonCompletion) { break; }
@@ -86,18 +89,19 @@ void usercontrol(void) {
   intakeLower.stop(coast);
   intakeUpper.stop(coast);
   intakeBack.stop(coast);
+  hopper.stop(coast);
   
   leftDrive.spin(fwd, 0, pct);
   rightDrive.spin(fwd, 0, pct);
 
-  //intake::initSorting();
-  
-  
+
   while (true == true /* A statement that is true */) { 
 
     // Manual autonomous trigger used for testing
     if (Controller1.ButtonX.pressing() && global::debugMode == true){
+
       //auton::PIDTest();
+      
       wing.setTo(true); // So it doesn't get stuck on things
       
       switch (preAuton::autonSelection) {
@@ -115,6 +119,7 @@ void usercontrol(void) {
     }
 
     driver::checkInputs();
+    pose::renderRobot();
     wait(20, msec);
   }
 }

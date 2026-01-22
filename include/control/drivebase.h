@@ -21,7 +21,7 @@ class Drivebase {
     PID drivePID;
     
   public:
-    
+
     /**
      * @brief Construct a new drivebase
      * 
@@ -85,26 +85,6 @@ class Drivebase {
      * @param recursions Maximum number of individual attempts
      */
     void driveTo(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 10, int recursions = 5);
-
-    /**
-     * @brief Returns the X coordinate of the robot center, in inches
-     * 
-     * @return double 
-     */
-    double getX() const;
-
-    /**
-     * @brief Returns the Y coordinate of the robot center, in inches
-     * 
-     * @return double 
-     */
-    double getY() const;
-
-    /**
-     * @brief Renders an approximation of the robot position on Brain screen
-     * 
-     */
-    void renderRobot();
 
     /**
      * @brief Demo function for PID
