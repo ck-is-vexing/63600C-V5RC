@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @namespace pose
+ * @brief Methods to locate the robot on the field
+ * 
+ */
 namespace pose {
 
   /**
@@ -17,6 +22,9 @@ namespace pose {
     Pose(double x, double y, double theta);
   };
   
+  /// Starting position of robot
+  extern Pose startingPose;
+
   /**
    * @brief Get the robot pose using GPS and IMU
    * 

@@ -104,7 +104,7 @@ void intake::scoreLongGoal(const int speedPercent) {
   intakeLower.spin(fwd, speedPercent, pct);
   intakeBack.spin(fwd, speedPercent, pct);
   intakeUpper.spin(fwd, speedPercent, pct);
-  hopper.spin(fwd, speedPercent, pct);
+  hopper.spin(fwd, 100, pct);
 
   intake::isActive = true;
 }
@@ -118,7 +118,7 @@ void intake::scoreCenterGoal(const int generalSpeedPercent, const int topSpeedPe
   intakeLower.spin(fwd, generalSpeedPercent, pct);
   intakeBack.spin(fwd, generalSpeedPercent, pct);
   intakeUpper.spin(reverse, topSpeedPercent, pct);
-  hopper.spin(fwd, generalSpeedPercent, pct);
+  hopper.spin(fwd, 100, pct);
 
   intake::isActive = true;
 }
@@ -126,7 +126,7 @@ void intake::scoreCenterGoal(const int generalSpeedPercent, const int topSpeedPe
 void intake::scoreLowGoal(const int speedPercent) {
   intakeLower.spin(reverse, speedPercent, pct);
   intakeBack.spin(fwd, speedPercent, pct);
-  hopper.spin(fwd, speedPercent, pct);
+  hopper.spin(fwd, 100, pct);
 
   intake::isActive = true;
 }

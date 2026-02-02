@@ -3,6 +3,7 @@
 #include "robot-config.h"
 #include "func/button.h"
 #include "definition.h"
+#include "control/pose.h"
 
 int preAuton::sideAngle = 180;
 int preAuton::inertialAngle = 0;
@@ -44,6 +45,7 @@ void preAuton::autonSelector() {
 
   Brain.Screen.clearScreen();
   wait(0.5, sec);
+
   // Select the autonomous -----------------------------------------------
 
   vex::color buttonColor;
@@ -161,24 +163,31 @@ void preAuton::autonSelector() {
 
 void preAuton::inertialGPSCalibrate(double averageSeconds) {
 
-  double averagedHeading = 0;
+  pose::Pose averagedPose;
   int i;
 
   printl("GPS Quality: " << GPS.quality());
 
-  // Sum of GPS angles
+  // Sum of GPS data
   for(i = 0; i < (averageSeconds * 25) + 1; i++) {
 
-    averagedHeading += (GPS.heading() - preAuton::sideAngle);
+    averagedPose.theta += (GPS.heading() - preAuton::sideAngle);
+    averagedPose.x     +=  GPS.xPosition(vex::distanceUnits::in);
+    averagedPose.y     +=  GPS.yPosition(vex::distanceUnits::in);
+
     wait(40, msec); // Update frequency of GPS sensor
   }
 
-  averagedHeading /= i;
+  averagedPose.theta /= i;
+  averagedPose.x     /= i;
+  averagedPose.y     /= i;
+
+  pose::startingPose = averagedPose;
 
   Controller1.Screen.clearScreen();
   Controller1.Screen.setCursor(1, 1);
   Controller1.Screen.print("Average: ");
-  Controller1.Screen.print(averagedHeading);
+  Controller1.Screen.print(averagedPose.theta);
   Controller1.Screen.setCursor(2, 1);
   Controller1.Screen.print("GPS: ");
   Controller1.Screen.print(GPS.heading());
@@ -188,7 +197,7 @@ void preAuton::inertialGPSCalibrate(double averageSeconds) {
 
   imu.calibrate();
   while (imu.isCalibrating()) { wait(100, msec); }
-  imu.setHeading(averagedHeading, deg);
+  imu.setHeading(averagedPose.theta, deg);
 
   Controller1.Screen.clearLine(3);
   Controller1.Screen.setCursor(3, 1);

@@ -40,7 +40,7 @@ void pre_auton(void) {
     // Force a GPS update before code that needs it
     Brain.Screen.print(GPS.heading()); 
   
-    preAuton::inertialGPSCalibrate(1);
+    preAuton::inertialGPSCalibrate(3);
 
   } else {
     // Manual backup in case there aren't GPS strips

@@ -43,6 +43,9 @@ extern inertial imu;
 extern ColorSensor sortColor;
 extern ColorSensor preloadColor;
 
+extern rotation odomForward;
+extern rotation odomSide;
+
 // Drivetrain
 extern Drivebase bot;
 

@@ -3,10 +3,13 @@
 #include "vex.h"
 #include "robot-config.h"
 #include <cmath>
+#include <algorithm>
 
 namespace {
-  constexpr double X_OFFSET_GPS_INCHES = 2;
-  constexpr double Y_OFFSET_GPS_INCHES = -5.5;
+  constexpr double X_OFFSET_GPS_INCHES = -4.7;
+  constexpr double Y_OFFSET_GPS_INCHES = 8;
+
+  constexpr double PI_OVER_180         = (M_PI / 180);
 }
 
 pose::Pose::Pose()
@@ -18,15 +21,16 @@ pose::Pose::Pose(double _x, double _y, double _theta)
 pose::Pose pose::getPoseGPS() {
   pose::Pose robotPose;
 
-  robotPose.theta = (imu.heading() * M_PI / 180);
+  robotPose.theta = imu.heading() * PI_OVER_180;
 
-  double angle = 180 - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - robotPose.theta;
+  double triAngle = M_PI - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - robotPose.theta;
+  double triHyp   = sqrt((X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES) + (Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES));
 
-  double deltaX = cos(angle) * sqrt((X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES) + (Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES));
-  double deltaY = sin(angle) * sqrt((X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES) + (Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES));
+  double offsetX  = sin(triAngle) * triHyp;
+  double offsetY  = cos(triAngle) * triHyp;
   
-  robotPose.x = (GPS.xPosition(distanceUnits::in) + deltaX);
-  robotPose.y = (GPS.yPosition(distanceUnits::in) + deltaY);
+  robotPose.x     = (GPS.xPosition(distanceUnits::in) + offsetX);
+  robotPose.y     = (GPS.yPosition(distanceUnits::in) + offsetY);
 
   return robotPose;
 }
@@ -34,7 +38,20 @@ pose::Pose pose::getPoseGPS() {
 pose::Pose pose::getPoseOdom() {
   pose::Pose robotPose;
 
-  robotPose.theta = (imu.heading() * M_PI / 180);
+  robotPose.theta  = imu.heading() * PI_OVER_180;
+
+  double forwardIn       = odomForward.angle() * PI_OVER_180;
+  double forwardTriTheta = robotPose.theta - M_PI;
+  double forwardDeltaX   = sin(forwardTriTheta) * forwardIn;
+  double forwardDeltaY   = cos(forwardTriTheta) * forwardIn;
+
+  double sideIn          = odomSide.angle() * PI_OVER_180;
+  double sideTriTheta    = robotPose.theta - M_PI;
+  double sideDeltaX      = sin(forwardTriTheta) * sideIn;
+  double sideDeltaY      = cos(forwardTriTheta) * sideIn;
+
+  robotPose.x = std::max(forwardDeltaX, sideDeltaX) + startingPose.x;
+  robotPose.y = std::max(forwardDeltaY, sideDeltaY) + startingPose.y;
 
   return robotPose;
 }
@@ -43,7 +60,6 @@ void pose::renderRobot() {
 
   // VEX Brain is 480x240p
   // 20p = 1 foot
-  // GPS sensor (0,0) is at the center of the field
 
   Brain.Screen.clearScreen();
   Brain.Screen.setPenColor(white);
