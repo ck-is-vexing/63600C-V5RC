@@ -3,6 +3,7 @@
 #include "vex.h"
 #include "robot-config.h"
 #include "definition.h"
+#include "game/pre-auton.h"
 #include <cmath>
 #include <algorithm>
 
@@ -27,21 +28,23 @@ namespace {
 
     while (true) {
 
+      // TODO: Subtract the delta turn arc distance every tick so it adjusts for the robot turning? this is just the angle in rad.
+
       odometryPose.theta   = imu.heading() * PI_OVER_180;
       double triTheta      = odometryPose.theta - M_PI;
 
       double forwardIn     = (odomForward.position(vex::rotationUnits::deg) - oldForwardAngle) * PI_OVER_180;
       double sideIn        = (odomSide.position(vex::rotationUnits::deg) - oldSideAngle) * PI_OVER_180;
 
-      oldForwardAngle      = odomForward.position(vex::rotationUnits::deg);
-      oldSideAngle         = odomSide.position(vex::rotationUnits::deg);
+      oldForwardAngle      =  odomForward.position(vex::rotationUnits::deg);
+      oldSideAngle         =  odomSide.position(vex::rotationUnits::deg);
 
       double forwardDeltaX = sin(triTheta)  * forwardIn;
       double sideDeltaX    = cos(-triTheta) * sideIn;
 
       double forwardDeltaY = cos(triTheta)  * forwardIn;
       double sideDeltaY    = sin(-triTheta) * sideIn;
-
+      
       odometryPose.x      += (forwardDeltaX + sideDeltaX);
       odometryPose.y      += (forwardDeltaY + sideDeltaY);
 
@@ -55,13 +58,16 @@ namespace {
   }
 }
 
-pose::Pose pose::startingPose;
 
 pose::Pose::Pose()
 : x(0.0), y(0.0), theta(0.0) {}
 
 pose::Pose::Pose(double _x, double _y, double _theta)
 : x(_x), y(_y), theta(_theta) {}
+
+
+pose::Pose pose::startingPose;
+
 
 pose::Pose pose::calcPoseGPS() {
   pose::Pose robotPose;
@@ -74,8 +80,13 @@ pose::Pose pose::calcPoseGPS() {
   double offsetX  = sin(triAngle) * triHyp;
   double offsetY  = cos(triAngle) * triHyp;
   
-  robotPose.x     = (GPS.xPosition(distanceUnits::in) + offsetX);
-  robotPose.y     = (GPS.yPosition(distanceUnits::in) + offsetY);
+  if (preAuton::startingGPS.flip) {
+    robotPose.y     = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
+    robotPose.x     = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
+  } else {
+    robotPose.x     = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
+    robotPose.y     = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
+  }
 
   return robotPose;
 }

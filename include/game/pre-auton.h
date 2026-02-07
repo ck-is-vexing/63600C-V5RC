@@ -10,23 +10,29 @@
 namespace preAuton {
 
   /**
-   * @brief Declare placement of GPS strips based on blue side
-   * @note Should be 90 for a correctly set up field 
-   *
-   */
-  extern int sideAngle;
-  
-  /**
-   * @brief enum instance for selecting auton
+   * @brief Modify the robot position based on GPS strip setup
+   * @note sideAngle should be the GPS strip angle of the side the robot starts on
    * 
    */
+  struct StartModifier {
+    int x;
+    int y;
+    unsigned int sideAngle;
+    bool flip;
+
+    StartModifier();
+
+    StartModifier(int x, int y, int sideAngle, bool flip);
+  };
+  
+  /// Instance of StartModifier for modifying initial gps pose
+  extern StartModifier startingGPS;
+
+  /// enum instance for selecting auton
   extern autonomousTypes autonSelection;
 
-  /**
-   * @brief Starting angle of the robot. Used when GPS is disabled
-   * 
-   */
-  extern int inertialAngle;
+  /// Starting angle of the robot. Used when GPS is disabled
+  extern double inertialAngle;
 
   /**
    * @brief Load interface for autonomous selection

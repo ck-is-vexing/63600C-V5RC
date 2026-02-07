@@ -37,7 +37,7 @@ ColorSensor sortColor    = ColorSensor(PORT8);
 ColorSensor preloadColor = ColorSensor(PORT9);
 
 rotation odomForward     = rotation(PORT10);
-rotation odomSide        = rotation(PORT21);
+rotation odomSide        = rotation(PORT21, true);
 
 // 6m Drivetrain init
 Drivebase bot = Drivebase(leftDrive, rightDrive, Brain, imu, GPS);

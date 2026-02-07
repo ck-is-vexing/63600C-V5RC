@@ -14,6 +14,7 @@ bool preAutonCompletion = false;
 
 /// Run before match begins
 void pre_auton(void) {
+  printl("\n\n");
   printl("Pre-Auton Init");
 
   vexcodeInit();
@@ -39,6 +40,8 @@ void pre_auton(void) {
 
     // Force a GPS update before code that needs it
     Brain.Screen.print(GPS.heading()); 
+    Brain.Screen.print(GPS.xPosition()); 
+    Brain.Screen.print(GPS.yPosition()); 
   
     preAuton::sensorCalibration(3);
 

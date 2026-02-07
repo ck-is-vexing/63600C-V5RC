@@ -5,12 +5,24 @@
 #include "definition.h"
 #include "control/pose.h"
 
-int preAuton::sideAngle = 180;
-int preAuton::inertialAngle = 0;
+preAuton::StartModifier::StartModifier()
+: x(0.0), y(0.0), sideAngle(0.0) {}
+
+preAuton::StartModifier::StartModifier(int _x, int _y, int _sideAngle, bool _flip)
+: x(_x), y(_y), sideAngle(_sideAngle), flip(_flip) {}
+
+
+preAuton::StartModifier preAuton::startingGPS = preAuton::StartModifier(1, 1, 180, false);
+double preAuton::inertialAngle = 0;
 autonomousTypes preAuton::autonSelection = autonomousTypes::NONE;
 
 
 void preAuton::autonSelector() {
+
+  global::yourColor = colorType::NONE;
+  preAuton::startingGPS.sideAngle = 270;
+
+  /*
   constexpr unsigned int MAX_SECONDS = 30;
 
   // Select the team color -----------------------------------------------
@@ -127,7 +139,7 @@ void preAuton::autonSelector() {
       break;
 
     } else if (decreaseAngle.isClicked() == true) {
-      preAuton::sideAngle -= 90;
+      preAuton::startingGPS.sideAngle -= 90;
       Brain.Screen.clearLine(3);
       left.render();
       right.render();
@@ -138,7 +150,7 @@ void preAuton::autonSelector() {
       wait(300, msec);
 
     } else if (increaseAngle.isClicked() == true) {
-      preAuton::sideAngle += 90;
+      preAuton::startingGPS.sideAngle += 90;
       Brain.Screen.clearLine(3);
       left.render();
       right.render();
@@ -159,21 +171,44 @@ void preAuton::autonSelector() {
     t++;
     wait(20, msec);
   }
+  */
+
+  if        (preAuton::startingGPS.sideAngle == 0)   {
+    preAuton::startingGPS.x    = -1;
+    preAuton::startingGPS.y    = -1;
+    preAuton::startingGPS.flip = false;
+
+  } else if (preAuton::startingGPS.sideAngle == 90)  {
+    preAuton::startingGPS.x    = -1;
+    preAuton::startingGPS.y    = 1;
+    preAuton::startingGPS.flip = true;
+
+  } else if (preAuton::startingGPS.sideAngle == 180) {
+    preAuton::startingGPS.x    = 1;
+    preAuton::startingGPS.y    = 1;
+    preAuton::startingGPS.flip = false;
+
+  } else {
+    preAuton::startingGPS.x    = 1;
+    preAuton::startingGPS.y    = -1;
+    preAuton::startingGPS.flip = true;
+  }
 }
 
 void preAuton::sensorCalibration(double averageSeconds) {
 
+  printl("GPS Quality: " << GPS.quality());
+  if (GPS.quality() < 100) { Brain.Screen.clearScreen(vex::color::red); }
+
   pose::Pose averagedPose;
   int i;
 
-  printl("GPS Quality: " << GPS.quality());
-
   // Sum of GPS data
-  for(i = 0; i < (averageSeconds * 25) + 1; i++) {
+  for (i = 0; i < (averageSeconds * 25) + 1; i++) {
 
     pose::Pose curPose = pose::calcPoseGPS();
 
-    averagedPose.theta += (GPS.heading() - preAuton::sideAngle);
+    averagedPose.theta += (GPS.heading() - preAuton::startingGPS.sideAngle);
     averagedPose.x     +=  curPose.x;
     averagedPose.y     +=  curPose.y;
 
@@ -185,6 +220,7 @@ void preAuton::sensorCalibration(double averageSeconds) {
   averagedPose.y     /= i;
 
   pose::startingPose = averagedPose;
+  printl("\n" << "( " << pose::startingPose.x << ", " << pose::startingPose.y << ", " << pose::startingPose.theta << " )");
 
   Controller1.Screen.clearScreen();
   Controller1.Screen.setCursor(1, 1);
