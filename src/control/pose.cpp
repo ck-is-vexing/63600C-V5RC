@@ -2,6 +2,7 @@
 
 #include "vex.h"
 #include "robot-config.h"
+#include "definition.h"
 #include <cmath>
 #include <algorithm>
 
@@ -10,7 +11,51 @@ namespace {
   constexpr double Y_OFFSET_GPS_INCHES = 8;
 
   constexpr double PI_OVER_180         = (M_PI / 180);
+
+  pose::Pose odometryPose;
+  bool odomRunning = false;
+
+  int odomTicker() {
+    printl("Odom Ticker Thread Init");
+
+    odometryPose           = pose::startingPose;
+    double oldForwardAngle = 0;
+    double oldSideAngle    = 0;
+
+    odomForward.resetPosition();
+    odomSide.resetPosition();
+
+    while (true) {
+
+      odometryPose.theta   = imu.heading() * PI_OVER_180;
+      double triTheta      = odometryPose.theta - M_PI;
+
+      double forwardIn     = (odomForward.position(vex::rotationUnits::deg) - oldForwardAngle) * PI_OVER_180;
+      double sideIn        = (odomSide.position(vex::rotationUnits::deg) - oldSideAngle) * PI_OVER_180;
+
+      oldForwardAngle      = odomForward.position(vex::rotationUnits::deg);
+      oldSideAngle         = odomSide.position(vex::rotationUnits::deg);
+
+      double forwardDeltaX = sin(triTheta)  * forwardIn;
+      double sideDeltaX    = cos(-triTheta) * sideIn;
+
+      double forwardDeltaY = cos(triTheta)  * forwardIn;
+      double sideDeltaY    = sin(-triTheta) * sideIn;
+
+      odometryPose.x      += (forwardDeltaX + sideDeltaX);
+      odometryPose.y      += (forwardDeltaY + sideDeltaY);
+
+      if (!odomRunning) { break; }
+
+      wait (10, msec);
+    }
+
+    printl("Thread Exiting!");
+    return 0;
+  }
 }
+
+pose::Pose pose::startingPose;
 
 pose::Pose::Pose()
 : x(0.0), y(0.0), theta(0.0) {}
@@ -18,7 +63,7 @@ pose::Pose::Pose()
 pose::Pose::Pose(double _x, double _y, double _theta)
 : x(_x), y(_y), theta(_theta) {}
 
-pose::Pose pose::getPoseGPS() {
+pose::Pose pose::calcPoseGPS() {
   pose::Pose robotPose;
 
   robotPose.theta = imu.heading() * PI_OVER_180;
@@ -35,26 +80,20 @@ pose::Pose pose::getPoseGPS() {
   return robotPose;
 }
 
-pose::Pose pose::getPoseOdom() {
-  pose::Pose robotPose;
 
-  robotPose.theta  = imu.heading() * PI_OVER_180;
-
-  double forwardIn       = odomForward.angle() * PI_OVER_180;
-  double forwardTriTheta = robotPose.theta - M_PI;
-  double forwardDeltaX   = sin(forwardTriTheta) * forwardIn;
-  double forwardDeltaY   = cos(forwardTriTheta) * forwardIn;
-
-  double sideIn          = odomSide.angle() * PI_OVER_180;
-  double sideTriTheta    = robotPose.theta - M_PI;
-  double sideDeltaX      = sin(forwardTriTheta) * sideIn;
-  double sideDeltaY      = cos(forwardTriTheta) * sideIn;
-
-  robotPose.x = std::max(forwardDeltaX, sideDeltaX) + startingPose.x;
-  robotPose.y = std::max(forwardDeltaY, sideDeltaY) + startingPose.y;
-
-  return robotPose;
+const pose::Pose pose::odom::getPose() {
+  return odometryPose;
 }
+
+void pose::odom::initTicker() {
+  odomRunning = true;
+  thread odomTickerThread = thread(odomTicker);
+}
+
+void pose::odom::killTicker() {
+  odomRunning = false;
+}
+
 
 void pose::renderRobot() {
 
@@ -79,41 +118,50 @@ void pose::renderRobot() {
   // Draw robot vector
   constexpr int VECTOR_LENGTH_PIXELS = 40;
 
-  pose::Pose pose_gps  = getPoseGPS();
-  pose::Pose pose_odom = getPoseOdom();
+  pose::Pose pose_gps  = calcPoseGPS();
+  pose::Pose pose_odom = odom::getPose();
 
   double x_gps   = pose_gps.x  * 5/3; // Convert inches to pixels
   double y_gps   = pose_gps.y  * 5/3;
-  double x2_gps  = x_gps  + cos(pose_gps.theta)  * VECTOR_LENGTH_PIXELS;
-  double y2_gps  = y_gps  + sin(pose_gps.theta)  * VECTOR_LENGTH_PIXELS;
+  double x2_gps  = x_gps  + sin(pose_gps.theta - M_PI)  * VECTOR_LENGTH_PIXELS;
+  double y2_gps  = y_gps  + cos(pose_gps.theta - M_PI)  * VECTOR_LENGTH_PIXELS;
 
   double x_odom  = pose_odom.x * 5/3;
   double y_odom  = pose_odom.y * 5/3;
-  double x2_odom = x_odom + cos(pose_odom.theta) * VECTOR_LENGTH_PIXELS;
-  double y2_odom = y_odom + sin(pose_odom.theta) * VECTOR_LENGTH_PIXELS;
+  double x2_odom = x_odom + sin(pose_odom.theta - M_PI) * VECTOR_LENGTH_PIXELS;
+  double y2_odom = y_odom + cos(pose_odom.theta - M_PI) * VECTOR_LENGTH_PIXELS;
 
   Brain.Screen.setPenWidth(6);
 
   Brain.Screen.setPenColor(blue);
   Brain.Screen.setFillColor(blue);
-  Brain.Screen.drawCircle(x_gps, y_gps, 8);
-  Brain.Screen.drawLine(x_gps + 120, y_gps + 120, x2_gps + 120, y2_gps + 120);
+  Brain.Screen.drawCircle(x_gps + 120, -y_gps + 120, 8);
+  Brain.Screen.drawLine(x_gps + 120, -y_gps + 120, x2_gps + 120, -y2_gps + 120);
 
   Brain.Screen.setPenColor(red);
   Brain.Screen.setFillColor(red);
-  Brain.Screen.drawCircle(x_odom + 120, y_odom + 120, 8);
-  Brain.Screen.drawLine(x_odom + 120, y_odom + 120, x2_odom + 120, y2_odom + 120);
+  Brain.Screen.drawCircle(x_odom + 120, -y_odom + 120, 8);
+  Brain.Screen.drawLine(x_odom + 120, -y_odom + 120, x2_odom + 120, -y2_odom + 120);
 
-  Brain.Screen.setCursor(4, 30);
   Brain.Screen.setPenColor(white);
   Brain.Screen.setFillColor(black);
   Brain.Screen.setPenWidth(1);
+  
+  Brain.Screen.setCursor(4, 30);
   Brain.Screen.print("Angle: ");
   Brain.Screen.print(pose_gps.theta);
+
   Brain.Screen.setCursor(5, 30);
-  Brain.Screen.print("X: ");
+  Brain.Screen.print("gpsX: ");
   Brain.Screen.print(pose_gps.x);
   Brain.Screen.setCursor(6, 30);
-  Brain.Screen.print("Y: ");
+  Brain.Screen.print("gpsY: ");
   Brain.Screen.print(pose_gps.y);
+
+  Brain.Screen.setCursor(7, 30);
+  Brain.Screen.print("odomX: ");
+  Brain.Screen.print(pose_odom.x);
+  Brain.Screen.setCursor(8, 30);
+  Brain.Screen.print("odomY: ");
+  Brain.Screen.print(pose_odom.y);
 }

@@ -40,7 +40,7 @@ void pre_auton(void) {
     // Force a GPS update before code that needs it
     Brain.Screen.print(GPS.heading()); 
   
-    preAuton::inertialGPSCalibrate(3);
+    preAuton::sensorCalibration(3);
 
   } else {
     // Manual backup in case there aren't GPS strips
@@ -51,6 +51,8 @@ void pre_auton(void) {
     Controller1.Screen.setCursor(3, 1);
     Controller1.Screen.print("Inertial Calibrated!");
   }
+
+  pose::odom::initTicker();
 
   preAutonCompletion = true;
 }

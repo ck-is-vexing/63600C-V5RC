@@ -12,7 +12,7 @@ namespace {
   bool isSorting = false;
 
   /// @brief Thread function which detects the end of preloading blocks into the intake
-  int preloadThread() {
+  int preloadChecker() {
     printl("Preload Thread Init");
 
     while (true) {
@@ -47,7 +47,7 @@ namespace {
   }
 
   /// @brief Thread function which adjusts the intake according to the color of blocks traveling through it
-  int colorSortThread() {
+  int colorSort() {
     printl("Color Sort Thread Init");
 
     colorType colorToRemove;
@@ -88,11 +88,11 @@ void intake::preload() {
   intakeUpper.spin(fwd, 10, pct);
   hopper.spin(fwd, 100, pct);
 
-  thread preloadChecker = thread(preloadThread);
+  thread preloadCheckerThread = thread(preloadChecker);
 }
 
 void intake::initSorting() {
-  thread colorSort = thread(colorSortThread);
+  thread colorSortThread = thread(colorSort);
 }
 
 void intake::scoreLongGoal(const int speedPercent) {

@@ -35,12 +35,12 @@ namespace preAuton {
   void autonSelector();
 
   /**
-   * @brief Calibrate inertial sensor based on GPS angle of robot
+   * @brief Calibrate imu and odom based on GPS data
    * 
    * On average, more precise than setting up the robot perfectly every time.
    * GPS data is averaged over a period of time to cancel out noise.
    *
    * @param averageSeconds  # of seconds to average GPS data over
    */
-  void inertialGPSCalibrate(double averageSeconds = 1);
+  void sensorCalibration(double averageSeconds = 1);
 }

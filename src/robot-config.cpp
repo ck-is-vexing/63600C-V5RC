@@ -36,7 +36,7 @@ inertial imu             = inertial(PORT6);
 ColorSensor sortColor    = ColorSensor(PORT8);
 ColorSensor preloadColor = ColorSensor(PORT9);
 
-rotation odomForward     = rotation(PORT21);
+rotation odomForward     = rotation(PORT10);
 rotation odomSide        = rotation(PORT21);
 
 // 6m Drivetrain init

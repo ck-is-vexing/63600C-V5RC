@@ -33,17 +33,37 @@ namespace pose {
    * 
    * @return Pose 
    */
-  Pose getPoseGPS();
+  Pose calcPoseGPS();
 
   /**
-   * @brief Get the robot pose using Odom and IMU
+   * @namespace odom 
+   * @brief Methods for controlling and interpreting odometry
    * 
-   * theta is in radians
-   * (x, y) are in inches with (0, 0) being the center of the field
-   * 
-   * @return Pose 
    */
-  Pose getPoseOdom();
+  namespace odom {
+
+    /**
+     * @brief Get the robot pose using Odom and IMU
+     * 
+     * theta is in radians
+     * (x, y) are in inches with (0, 0) being the center of the field
+     * 
+     * @return Pose 
+     */
+    const Pose getPose();
+
+    /**
+     * @brief Initialize background odometry calculations
+     * 
+     */
+    void initTicker();
+
+    /**
+     * @brief Kill all odometry threads
+     * 
+     */
+    void killTicker();
+  }
 
   /**
    * @brief Renders an approximation of the robot position on Brain screen

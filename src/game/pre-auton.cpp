@@ -161,7 +161,7 @@ void preAuton::autonSelector() {
   }
 }
 
-void preAuton::inertialGPSCalibrate(double averageSeconds) {
+void preAuton::sensorCalibration(double averageSeconds) {
 
   pose::Pose averagedPose;
   int i;
@@ -171,9 +171,11 @@ void preAuton::inertialGPSCalibrate(double averageSeconds) {
   // Sum of GPS data
   for(i = 0; i < (averageSeconds * 25) + 1; i++) {
 
+    pose::Pose curPose = pose::calcPoseGPS();
+
     averagedPose.theta += (GPS.heading() - preAuton::sideAngle);
-    averagedPose.x     +=  GPS.xPosition(vex::distanceUnits::in);
-    averagedPose.y     +=  GPS.yPosition(vex::distanceUnits::in);
+    averagedPose.x     +=  curPose.x;
+    averagedPose.y     +=  curPose.y;
 
     wait(40, msec); // Update frequency of GPS sensor
   }
