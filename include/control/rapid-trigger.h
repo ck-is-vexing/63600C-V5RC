@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vex.h"
-#include "control/curves.h"
+#include "func/curves.h"
 #include <functional>
 
 /**

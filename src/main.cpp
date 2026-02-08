@@ -3,9 +3,9 @@
 #include "game/driver.h"
 #include "robot-config.h"
 #include "control/intake.h"
+#include "func/pose.h"
 #include "global.h"
 #include "definition.h"
-#include "control/pose.h"
 
 using namespace vex;
 competition Competition;
@@ -105,7 +105,9 @@ void usercontrol(void) {
     // Manual autonomous trigger used for testing
     if (Controller1.ButtonX.pressing() && global::debugMode == true){
 
-      //auton::PIDTest();
+      bot.driveTo(pose::Pose(-40, -40, 90));
+
+      /*auton::PIDTest();
       
       wing.setTo(true); // So it doesn't get stuck on things
       
@@ -116,7 +118,7 @@ void usercontrol(void) {
         case autonomousTypes::TWO_INCH: auton::twoInch();
         case autonomousTypes::SKILLS:   auton::skills();
         case autonomousTypes::NONE:     break;
-      }
+      }*/
       
       wait(5, sec);
       leftDrive.spin(fwd, 0, pct);

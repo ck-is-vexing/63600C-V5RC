@@ -1,6 +1,7 @@
 #include "control/drivebase.h"
-#include <cmath>
+
 #include "definition.h"
+#include <cmath>
 
 using namespace vex;
 
@@ -9,12 +10,13 @@ namespace {
   constexpr double GEAR_RATIO = 36.0 / 48.0;
 
   constexpr double INCH_CONVERSION = (M_PI * WHEEL_DIAMETER) * GEAR_RATIO / 360.0;
+
+  constexpr double RAD_TO_DEG = (180 / M_PI);
 }
 
 Drivebase::Drivebase(vex::motor_group& leftMotors, vex::motor_group& rightMotors, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
 : ld(leftMotors), rd(rightMotors), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
   headingPID(0.5, 0.0001, 25, 10, true),
-  fancyDrivePID(1, 0, 0, 40), // 40ms because of gps refresh rate
   drivePID(0.8, 0, 0, 10) {}
 
 void Drivebase::drive(directionType direction, double inches, int velocityPercent) {
@@ -37,15 +39,15 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
     for (int t = 0; t < (secondsAllowed * 100); t++){ // Loops in sets of 10 ms
 
       currentAngle = inert.heading();
-      double change = headingPID.update(desiredAngle, currentAngle);
+      double speed = headingPID.update(desiredAngle, currentAngle);
       
       // Represents the realistic abilities of VEX motors
-      if (std::abs(change) < minimumSpeed) {
-        change = std::copysign(minimumSpeed, change);
+      if (std::abs(speed) < minimumSpeed) {
+        speed = std::copysign(minimumSpeed, speed);
       }
 
-      ld.spin(fwd, change, pct);
-      rd.spin(reverse, change, pct);
+      ld.spin(fwd, speed, pct);
+      rd.spin(reverse, speed, pct);
 
       if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
           (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
@@ -138,16 +140,62 @@ void Drivebase::driveTo(vex::directionType direction, double desiredInches, doub
   }
 }
 
-void Drivebase::driveTo(double desiredX, double desiredY, double precision, double secondsAllowed, int recursions) {
-
-  // Calculate the angle
-  // pv = sqrt((y2 - y1)^2 + (x2 - x1)^2)
-  // theta = atan((y2 - y1) / (x2 - x1))
-  // Turn to face the desired point
-  turnTo(atan(3));
+void Drivebase::driveTo(pose::Pose desiredPose, double precision, double secondsAllowed, int recursions, double minimumSpeed) {
 
   headingPID.reset();
-  fancyDrivePID.reset();
+  drivePID.reset();
+  pose::Pose curPose;
+
+  for (int i = 0; i < recursions; i++){
+    for (int t = 0; t < (secondsAllowed * 100); t++){ // Loops in sets of 10 ms
+
+      curPose             = pose::odom::getPose();
+      double pv           = sqrt( (desiredPose.y - curPose.y) * (desiredPose.y - curPose.y) + (desiredPose.x - curPose.x) * (desiredPose.x - curPose.x) );
+      double angleToPoint = (3*M_PI/2 - atan( (desiredPose.y - curPose.y) / (desiredPose.x - curPose.x) ));
+
+      double angleSpeed   = headingPID.update((angleToPoint * RAD_TO_DEG), (curPose.theta * RAD_TO_DEG));
+      double driveSpeed   = drivePID.update(0, pv);
+      
+      // Represents the realistic abilities of VEX motors
+      if (std::abs(driveSpeed) < minimumSpeed) {
+        driveSpeed = std::copysign(minimumSpeed, driveSpeed);
+      }
+
+      ld.spin(fwd, driveSpeed + angleSpeed, pct);
+      rd.spin(fwd, driveSpeed - angleSpeed, pct);
+
+      /*if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
+          (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
+          (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){
+
+        break;
+      }*/
+      
+      wait(10, msec); 
+    }
+
+    ld.stop(hold);
+    rd.stop(hold);
+    headingPID.reset();
+    drivePID.reset();
+
+    // In case drivetrain is still in motion and moves away from setpoint
+    wait(100, msec);
+    /*
+    currentAngle = inert.heading();
+
+    if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
+        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
+        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){
+    
+      ld.stop(coast);
+      rd.stop(coast);
+      break;
+    }  */
+    // If the correct angle was not achieved, the code will recurse
+  }
+
+  turnTo(desiredPose.theta * RAD_TO_DEG, precision);
 }
 
 void Drivebase::demoTo(double desiredAngle) {

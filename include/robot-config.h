@@ -4,7 +4,7 @@
 #include "control/drivebase.h"
 #include "control/pneumatic.h"
 #include "control/color-sensor.h"
-#include "control/curves.h"
+#include "func/curves.h"
 #include "control/rapid-trigger.h"
 
 using namespace vex;

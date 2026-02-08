@@ -1,4 +1,4 @@
-#include "control/pose.h"
+#include "func/pose.h"
 
 #include "vex.h"
 #include "robot-config.h"
@@ -29,6 +29,7 @@ namespace {
     while (true) {
 
       // TODO: Subtract the delta turn arc distance every tick so it adjusts for the robot turning? this is just the angle in rad.
+      // *might not be necessary*
 
       odometryPose.theta   = imu.heading() * PI_OVER_180;
       double triTheta      = odometryPose.theta - M_PI;
@@ -81,11 +82,11 @@ pose::Pose pose::calcPoseGPS() {
   double offsetY  = cos(triAngle) * triHyp;
   
   if (preAuton::startingGPS.flip) {
-    robotPose.y     = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
-    robotPose.x     = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
+    robotPose.y   = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
+    robotPose.x   = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
   } else {
-    robotPose.x     = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
-    robotPose.y     = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
+    robotPose.x   = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
+    robotPose.y   = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
   }
 
   return robotPose;

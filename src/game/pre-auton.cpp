@@ -3,7 +3,7 @@
 #include "robot-config.h"
 #include "func/button.h"
 #include "definition.h"
-#include "control/pose.h"
+#include "func/pose.h"
 
 preAuton::StartModifier::StartModifier()
 : x(0.0), y(0.0), sideAngle(0.0) {}

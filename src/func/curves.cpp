@@ -1,4 +1,4 @@
-#include "control/curves.h"
+#include "func/curves.h"
 #include <cmath>
 
 double curves::linear(int axisPos) {

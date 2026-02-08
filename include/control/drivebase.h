@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vex.h"
+#include "func/pose.h"
 #include "func/PID.h"
 
 /**
@@ -17,7 +18,6 @@ class Drivebase {
     vex::gps& gps;
 
     PID headingPID;
-    PID fancyDrivePID;
     PID drivePID;
     
   public:
@@ -76,15 +76,13 @@ class Drivebase {
 
     /**
      * @brief Drive the robot to precise coordinates on the field
-     * @warning CURRENTLY IN PROGRESS. DOES NOT WORK. 
      *
-     * @param desiredX Desired X coordinate, in feet, field-orientated
-     * @param desiredY Desired Y coordinate, in feet, field-orientated
+     * @param desiredPose desired (x, y, theta). Coords in feet, angle in degrees
      * @param precision Amount of error in inches driven that is accepted
      * @param secondsAllowed Maximum time to recursively drive
      * @param recursions Maximum number of individual attempts
      */
-    void driveTo(double desiredX, double desiredY, double precision = 0.5, double secondsAllowed = 10, int recursions = 5);
+    void driveTo(pose::Pose desiredPose, double precision = 0.5, double secondsAllowed = 10, int recursions = 5, double minimumSpeed = 1.8);
 
     /**
      * @brief Demo function for PID
