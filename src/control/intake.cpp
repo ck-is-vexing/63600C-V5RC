@@ -2,13 +2,13 @@
 #include "definition.h"
 #include "global.h"
 
-bool intake::isActive = false;
+bool intake::isActive     = false;
+bool intake::isPreloading = false;
 
 using namespace vex;
 
 namespace {
-  
-  bool isPreloading = false;
+
   bool isSorting = false;
 
   /// @brief Thread function which detects the end of preloading blocks into the intake
@@ -24,7 +24,7 @@ namespace {
         hopper.stop(brake);
 
         this_thread::sleep_for(100);
-        isPreloading = false;
+        intake::isPreloading = false;
         break;
       }
 
@@ -35,7 +35,7 @@ namespace {
         intakeUpper.stop(brake);
         hopper.stop(brake);
         
-        isPreloading = false;
+        intake::isPreloading = false;
         break;
       }
 
@@ -60,7 +60,7 @@ namespace {
 
     while (true) {
 
-      if (intake::isActive && sortColor.getBlock() == colorToRemove && !isPreloading) {
+      if (intake::isActive && sortColor.getBlock() == colorToRemove && !intake::isPreloading) {
         isSorting = true;
 
         redirect.setTo(true);
@@ -126,7 +126,7 @@ void intake::scoreCenterGoal(const int generalSpeedPercent, const int topSpeedPe
 void intake::scoreLowGoal(const int speedPercent) {
   intakeLower.spin(reverse, speedPercent, pct);
   intakeBack.spin(fwd, speedPercent, pct);
-  hopper.spin(fwd, 100, pct);
+  hopper.spin(fwd, speedPercent, pct);
 
   intake::isActive = true;
 }

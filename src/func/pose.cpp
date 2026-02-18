@@ -29,7 +29,7 @@ namespace {
     while (true) {
 
       // TODO: Subtract the delta turn arc distance every tick so it adjusts for the robot turning? this is just the angle in rad.
-      // *might not be necessary*
+      // this also needs the distance of the wheel from the center of the robot to calculate proper arc length
 
       odometryPose.theta   = imu.heading() * PI_OVER_180;
       double triTheta      = odometryPose.theta - M_PI;

@@ -36,6 +36,8 @@ extern motor hopper;
 extern Pneumatic redirect;
 extern Pneumatic matchLoadMech;
 extern Pneumatic wing;
+extern Pneumatic aligner;
+extern Pneumatic odomRetract;
 
 // Sensors
 extern gps GPS;

@@ -55,7 +55,10 @@ void pre_auton(void) {
     Controller1.Screen.print("Inertial Calibrated!");
   }
 
-  pose::odom::initTicker();
+  
+  if (global::debugMode) {
+    pose::odom::initTicker();
+  }
 
   preAutonCompletion = true;
 }
@@ -79,9 +82,7 @@ void autonomous(void) {
 /// Run during match driver control
 void usercontrol(void) {
 
-  // If commented out, it's due to risk in matches of not being able to drive
-  // This should only affect practice, but it's better safe than sorry
-  if (!preAutonCompletion) {
+  if (!preAutonCompletion && global::debugMode == true) {
     while (true) {
       if (preAutonCompletion) { break; }
       wait (100, msec);
@@ -125,8 +126,11 @@ void usercontrol(void) {
       rightDrive.spin(fwd, 0, pct);
     }
 
+    if (global::debugMode) {
+      pose::renderRobot();
+    }
+
     driver::checkInputs();
-    pose::renderRobot();
     wait(20, msec);
   }
 }

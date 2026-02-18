@@ -13,6 +13,9 @@ namespace intake {
   /// Changes based on whether the intake motors are running
   extern bool isActive;
 
+  /// Changes based on whether the robot is currently preloading
+  extern bool isPreloading;
+
   /**
    * @brief Load blocks up the intake for scoring
    * 

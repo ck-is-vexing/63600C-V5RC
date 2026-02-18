@@ -28,6 +28,8 @@ motor hopper             = motor(PORT2, ratio18_1); // 5.5W
 Pneumatic redirect       = Pneumatic(Brain.ThreeWirePort.D, true);
 Pneumatic matchLoadMech  = Pneumatic(Brain.ThreeWirePort.B);
 Pneumatic wing           = Pneumatic(Brain.ThreeWirePort.C);
+Pneumatic aligner        = Pneumatic(Brain.ThreeWirePort.E);
+Pneumatic odomRetract    = Pneumatic(Brain.ThreeWirePort.F);
 
 // Sensors
 gps GPS                  = gps(PORT7, 359);

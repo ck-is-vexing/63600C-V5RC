@@ -8,7 +8,6 @@ using namespace vex;
 namespace {
   constexpr double WHEEL_DIAMETER = 2.75;
   constexpr double GEAR_RATIO = 36.0 / 48.0;
-
   constexpr double INCH_CONVERSION = (M_PI * WHEEL_DIAMETER) * GEAR_RATIO / 360.0;
 
   constexpr double RAD_TO_DEG = (180 / M_PI);
@@ -141,6 +140,8 @@ void Drivebase::driveTo(vex::directionType direction, double desiredInches, doub
 }
 
 void Drivebase::driveTo(pose::Pose desiredPose, double precision, double secondsAllowed, int recursions, double minimumSpeed) {
+  constexpr double REVERSAL_THRESHOLD_ANGLE = (3*M_PI/4);
+  constexpr double ANGLE_COORDINATE_TRANSFORMATION = (3*M_PI/2);
 
   headingPID.reset();
   drivePID.reset();
@@ -151,25 +152,36 @@ void Drivebase::driveTo(pose::Pose desiredPose, double precision, double seconds
 
       curPose             = pose::odom::getPose();
       double pv           = sqrt( (desiredPose.y - curPose.y) * (desiredPose.y - curPose.y) + (desiredPose.x - curPose.x) * (desiredPose.x - curPose.x) );
-      double angleToPoint = (3*M_PI/2 - atan( (desiredPose.y - curPose.y) / (desiredPose.x - curPose.x) ));
+      double angleToPoint = (ANGLE_COORDINATE_TRANSFORMATION - atan2( (desiredPose.y - curPose.y), (desiredPose.x - curPose.x) ));
 
-      double angleSpeed   = headingPID.update((angleToPoint * RAD_TO_DEG), (curPose.theta * RAD_TO_DEG));
-      double driveSpeed   = drivePID.update(0, pv);
+      int reversalMod     = 1;
+      double reversalChk  = angleToPoint;
+
+      if (reversalChk > M_PI){
+        reversalChk -= 2*M_PI;
+      } else if (reversalChk < M_PI){
+        reversalChk += 2*M_PI;
+      }
       
-      // Represents the realistic abilities of VEX motors
-      if (std::abs(driveSpeed) < minimumSpeed) {
-        driveSpeed = std::copysign(minimumSpeed, driveSpeed);
+      if (std::abs(reversalChk - curPose.theta) >= REVERSAL_THRESHOLD_ANGLE) {
+        reversalMod       = -1;
+        //angleToPoint     += std::copysign(M_PI, (angleToPoint - curPose.theta));
       }
 
-      ld.spin(fwd, driveSpeed + angleSpeed, pct);
-      rd.spin(fwd, driveSpeed - angleSpeed, pct);
+      printl(reversalChk);
 
-      /*if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
-          (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
-          (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){
-
-        break;
+      double angleSpeed   = headingPID.update((angleToPoint * RAD_TO_DEG), (curPose.theta * RAD_TO_DEG));
+      double driveSpeed   = drivePID.update(0, -pv);
+      
+      // Represents the realistic abilities of VEX motors
+      /*if (std::abs(driveSpeed) < minimumSpeed) {
+        driveSpeed = std::copysign(minimumSpeed, driveSpeed);
       }*/
+
+      ld.spin(fwd, (driveSpeed + angleSpeed) * reversalMod, pct);
+      rd.spin(fwd, (driveSpeed - angleSpeed) * reversalMod, pct);
+
+      if (pv < precision) { break; }
       
       wait(10, msec); 
     }
@@ -181,18 +193,15 @@ void Drivebase::driveTo(pose::Pose desiredPose, double precision, double seconds
 
     // In case drivetrain is still in motion and moves away from setpoint
     wait(100, msec);
-    /*
-    currentAngle = inert.heading();
-
-    if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
-        (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
-        (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ){
     
+    curPose   = pose::odom::getPose();
+    double pvSquared = (desiredPose.y - curPose.y) * (desiredPose.y - curPose.y) + (desiredPose.x - curPose.x) * (desiredPose.x - curPose.x);
+
+    if (pvSquared < (precision * precision)) {
       ld.stop(coast);
       rd.stop(coast);
       break;
-    }  */
-    // If the correct angle was not achieved, the code will recurse
+    }
   }
 
   turnTo(desiredPose.theta * RAD_TO_DEG, precision);

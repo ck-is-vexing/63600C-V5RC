@@ -77,8 +77,8 @@ class Drivebase {
     /**
      * @brief Drive the robot to precise coordinates on the field
      *
-     * @param desiredPose desired (x, y, theta). Coords in feet, angle in degrees
-     * @param precision Amount of error in inches driven that is accepted
+     * @param desiredPose desired (x, y, theta). Coords in inches, angle in degrees
+     * @param precision Amount of error in inches that is acceptable
      * @param secondsAllowed Maximum time to recursively drive
      * @param recursions Maximum number of individual attempts
      */
