@@ -181,6 +181,8 @@ void auton::winpoint() {
 
 void auton::twoInch() {
   bot.drive(fwd, 2, 20);
+
+  wait(15, sec);
 }
 
 void auton::skills() {
