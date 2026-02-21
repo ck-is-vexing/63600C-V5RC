@@ -16,6 +16,9 @@ namespace intake {
   /// Changes based on whether the robot is currently preloading
   extern bool isPreloading;
 
+  /// Cooldown ticker for the aligner
+  extern int alignerTicker;
+
   /**
    * @brief Load blocks up the intake for scoring
    * 

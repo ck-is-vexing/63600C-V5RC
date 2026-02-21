@@ -36,6 +36,17 @@ namespace pose {
   Pose calcPoseGPS();
 
   /**
+   * @brief Get the robot pose using distance sensors and IMU
+   * 
+   * theta is in radians
+   * (x, y) are in inches with (0, 0) being the center of the field
+   * 
+   * @return Pose 
+   */
+  Pose calcPoseDist();
+
+  
+  /**
    * @namespace odom 
    * @brief Methods for controlling and interpreting odometry
    * 
@@ -65,9 +76,30 @@ namespace pose {
     void killTicker();
   }
 
+
   /**
-   * @brief Renders an approximation of the robot position on Brain screen
+   * @namespace render
+   * @brief Methods to render the robot pose on Brain screen
    * 
    */
-  void renderRobot();
+  namespace render {
+
+    /**
+     * @brief Initialize a thread running renderRobot
+     * 
+     */
+    void initTicker();
+
+    /**
+     * @brief Kill all render threads
+     * 
+     */
+    void killTicker();
+
+    /**
+     * @brief Renders an approximation of the robot position on Brain screen
+     * 
+     */
+    void renderRobot();
+  }
 }

@@ -14,7 +14,7 @@ bool preAutonCompletion = false;
 
 /// Run before match begins
 void pre_auton(void) {
-  printl("\n\n");
+  printl("\033[2J" << "\033[H" << "\033[3J"); // ANSI escape code for clear terminal window, move cursor to home position, clear history
   printl("Pre-Auton Init");
 
   vexcodeInit();
@@ -26,6 +26,7 @@ void pre_auton(void) {
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
   redirect.setTo(true);
+  odomRetract.setTo(false);
 
   sortColor.setLight(ledState::on);
   preloadColor.setLight(ledState::on);
@@ -58,6 +59,7 @@ void pre_auton(void) {
   
   if (global::debugMode) {
     pose::odom::initTicker();
+    pose::render::initTicker();
   }
 
   preAutonCompletion = true;
@@ -82,11 +84,15 @@ void autonomous(void) {
 /// Run during match driver control
 void usercontrol(void) {
 
-  if (!preAutonCompletion && global::debugMode == true) {
+  if (!preAutonCompletion && global::debugMode) {
     while (true) {
       if (preAutonCompletion) { break; }
       wait (100, msec);
     }
+  }
+
+  if (global::debugMode == false) {
+    odomRetract.setTo(true);
   }
 
   printl("Driver Init");
@@ -124,10 +130,6 @@ void usercontrol(void) {
       wait(5, sec);
       leftDrive.spin(fwd, 0, pct);
       rightDrive.spin(fwd, 0, pct);
-    }
-
-    if (global::debugMode) {
-      pose::renderRobot();
     }
 
     driver::checkInputs();

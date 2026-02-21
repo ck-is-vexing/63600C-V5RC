@@ -78,11 +78,11 @@ class Drivebase {
      * @brief Drive the robot to precise coordinates on the field
      *
      * @param desiredPose desired (x, y, theta). Coords in inches, angle in degrees
-     * @param precision Amount of error in inches that is acceptable
+     * @param precision Amount of error for each element of robot pose. Positional precision in inches, angle in degrees.
      * @param secondsAllowed Maximum time to recursively drive
      * @param recursions Maximum number of individual attempts
      */
-    void driveTo(pose::Pose desiredPose, double precision = 0.5, double secondsAllowed = 10, int recursions = 5, double minimumSpeed = 1.8);
+    void driveTo(pose::Pose desiredPose, pose::Pose precision = pose::Pose(1, 1, 5), double secondsAllowed = 10, int recursions = 5, double minimumSpeed = 1.8);
 
     /**
      * @brief Demo function for PID

@@ -9,47 +9,51 @@
 
 using namespace vex;
 
-extern brain Brain;
-extern controller Controller1;
-extern controller Controller2;
+extern brain        Brain;
+extern controller   Controller1;
+extern controller   Controller2;
 
 // Drivetrain motors
-extern motor leftBack;
-extern motor leftMiddle;
-extern motor leftFront;
-extern motor_group leftDrive;
+extern motor        leftBack;
+extern motor        leftMiddle;
+extern motor        leftFront;
+extern motor_group  leftDrive;
 
-extern motor rightBack;
-extern motor rightMiddle;
-extern motor rightFront;
-extern motor_group rightDrive;
+extern motor        rightBack;
+extern motor        rightMiddle;
+extern motor        rightFront;
+extern motor_group  rightDrive;
 
 // Intake motors
-extern motor intakeUpper;
-extern motor intakeLower;
-extern motor intakeBack;
+extern motor        intakeUpper;
+extern motor        intakeLower;
+extern motor        intakeBack;
 
 // Hopper motor
-extern motor hopper;
+extern motor        hopper;
 
 // Pneumatics
-extern Pneumatic redirect;
-extern Pneumatic matchLoadMech;
-extern Pneumatic wing;
-extern Pneumatic aligner;
-extern Pneumatic odomRetract;
+extern Pneumatic    redirect;
+extern Pneumatic    matchLoadMech;
+extern Pneumatic    wing;
+extern Pneumatic    aligner;
+extern Pneumatic    odomRetract;
 
 // Sensors
-extern gps GPS;
-extern inertial imu;
-extern ColorSensor sortColor;
-extern ColorSensor preloadColor;
+extern gps          GPS;
+extern inertial     imu;
+extern ColorSensor  sortColor;
+extern ColorSensor  preloadColor;
 
-extern rotation odomForward;
-extern rotation odomSide;
+extern rotation     odomForward;
+extern rotation     odomSide;
+
+extern distance     leftDist;
+extern distance     frontDist;
+extern distance     rightDist;
 
 // Drivetrain
-extern Drivebase bot;
+extern Drivebase    bot;
 
 // Rapid Trigger
 extern RapidTrigger leftJoystick;

@@ -2,8 +2,9 @@
 #include "definition.h"
 #include "global.h"
 
-bool intake::isActive     = false;
-bool intake::isPreloading = false;
+bool intake::isActive      = false;
+bool intake::isPreloading  = false;
+int  intake::alignerTicker = 0;
 
 using namespace vex;
 
@@ -24,6 +25,7 @@ namespace {
         hopper.stop(brake);
 
         this_thread::sleep_for(100);
+        intake::alignerTicker = 0;
         intake::isPreloading = false;
         break;
       }
@@ -35,6 +37,7 @@ namespace {
         intakeUpper.stop(brake);
         hopper.stop(brake);
         
+        intake::alignerTicker = -1000;
         intake::isPreloading = false;
         break;
       }
