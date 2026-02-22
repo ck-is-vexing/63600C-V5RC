@@ -25,7 +25,7 @@ namespace {
         hopper.stop(brake);
 
         this_thread::sleep_for(100);
-        intake::alignerTicker = 0;
+        intake::alignerTicker = -1000000;
         intake::isPreloading = false;
         break;
       }
@@ -37,7 +37,7 @@ namespace {
         intakeUpper.stop(brake);
         hopper.stop(brake);
         
-        intake::alignerTicker = -1000;
+        intake::alignerTicker = -1000000;
         intake::isPreloading = false;
         break;
       }

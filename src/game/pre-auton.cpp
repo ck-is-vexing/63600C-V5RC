@@ -202,32 +202,23 @@ void preAuton::sensorCalibration(double averageSeconds) {
   printl("GPS Quality: " << GPS.quality());
   if (GPS.quality() < 100) { Brain.Screen.clearScreen(vex::color::red); }
 
-  pose::Pose averagedPose;
-  int i;
+  double averagedTheta = 0;
+  int    i;
 
   // Sum of GPS data
   for (i = 0; i < (averageSeconds * 25) + 1; i++) {
 
-    pose::Pose curPose = pose::calcPoseGPS();
-
-    averagedPose.theta += (GPS.heading() - preAuton::startingGPS.sideAngle);
-    averagedPose.x     +=  curPose.x;
-    averagedPose.y     +=  curPose.y;
+    averagedTheta += (GPS.heading() - preAuton::startingGPS.sideAngle);
 
     wait(40, msec); // Update frequency of GPS sensor
   }
 
-  averagedPose.theta /= i;
-  averagedPose.x     /= i;
-  averagedPose.y     /= i;
-
-  pose::startingPose = averagedPose;
-  printl("\n" << "( " << pose::startingPose.x << ", " << pose::startingPose.y << ", " << pose::startingPose.theta << " )");
+  averagedTheta /= i;
 
   Controller1.Screen.clearScreen();
   Controller1.Screen.setCursor(1, 1);
   Controller1.Screen.print("Average: ");
-  Controller1.Screen.print(averagedPose.theta);
+  Controller1.Screen.print(averagedTheta);
   Controller1.Screen.setCursor(2, 1);
   Controller1.Screen.print("GPS: ");
   Controller1.Screen.print(GPS.heading());
@@ -237,9 +228,17 @@ void preAuton::sensorCalibration(double averageSeconds) {
 
   imu.calibrate();
   while (imu.isCalibrating()) { wait(100, msec); }
-  imu.setHeading(averagedPose.theta, deg);
+  imu.setHeading(averagedTheta, deg);
 
   Controller1.Screen.clearLine(3);
   Controller1.Screen.setCursor(3, 1);
   Controller1.Screen.print("Inertial Calibrated!");
+
+
+  pose::Pose curPose       = pose::calcPoseDist();
+
+  pose::startingPose       = curPose;
+  pose::startingPose.theta = averagedTheta;
+
+  printl("\n" << "( " << pose::startingPose.x << ", " << pose::startingPose.y << ", " << pose::startingPose.theta << " )");
 }

@@ -8,18 +8,18 @@
 #include <algorithm>
 
 namespace {
-  constexpr double X_OFFSET_GPS_INCHES            = -4.7;
-  constexpr double Y_OFFSET_GPS_INCHES            = 8;
+  constexpr double X_OFFSET_GPS_INCHES            = -4.65;
+  constexpr double Y_OFFSET_GPS_INCHES            = 7.4;
 
 
-  constexpr double X_OFFSET_LEFT_DISTANCE_INCHES  = -5;
-  constexpr double Y_OFFSET_LEFT_DISTANCE_INCHES  = 5;
+  constexpr double X_OFFSET_LEFT_DISTANCE_INCHES  = -7.5;
+  constexpr double Y_OFFSET_LEFT_DISTANCE_INCHES  = 4.25;
 
-  constexpr double X_OFFSET_FRONT_DISTANCE_INCHES = 5;
-  constexpr double Y_OFFSET_FRONT_DISTANCE_INCHES = 4;
+  constexpr double X_OFFSET_FRONT_DISTANCE_INCHES = 4.75;
+  constexpr double Y_OFFSET_FRONT_DISTANCE_INCHES = 7.5;
 
-  constexpr double X_OFFSET_RIGHT_DISTANCE_INCHES = 5;
-  constexpr double Y_OFFSET_RIGHT_DISTANCE_INCHES = 5;
+  constexpr double X_OFFSET_RIGHT_DISTANCE_INCHES = 7.5;
+  constexpr double Y_OFFSET_RIGHT_DISTANCE_INCHES = 4.25;
 
 
   constexpr double PI_OVER_180                    = (M_PI / 180);
@@ -128,69 +128,70 @@ pose::Pose pose::calcPoseGPS() {
 
 pose::Pose pose::calcPoseDist() {
   pose::Pose robotPose;
+  
+  robotPose.theta   =  fmod((imu.heading() * PI_OVER_180), 2 * M_PI);
+  
+  double sinTheta   =  sin(robotPose.theta);
+  double cosTheta   =  cos(robotPose.theta);
 
-  robotPose.theta = fmod( (imu.heading() * PI_OVER_180), 2*M_PI );
+  double frontVectX = -sinTheta;
+  double frontVectY = -cosTheta;
+  double sideVectX  = -cosTheta;
+  double sideVectY  =  sinTheta;
 
-  double frontVal = frontDist.objectDistance(vex::distanceUnits::in);
+
+  double frontVal   = frontDist.objectDistance(vex::distanceUnits::in);
+
   double sideVal;
+  double sideOffsetX, sideOffsetY;
+  double sideVX, sideVY;
 
-  double sideOffsetX;
-  double sideOffsetY;
-
-  if        (leftDist.isObjectDetected()) {
-    sideVal       = leftDist.objectDistance(vex::distanceUnits::in);
-    sideOffsetX   = X_OFFSET_LEFT_DISTANCE_INCHES;
-    sideOffsetY   = Y_OFFSET_LEFT_DISTANCE_INCHES;
+  if (leftDist.isObjectDetected()) {
+    sideVal     = leftDist.objectDistance(vex::distanceUnits::in);
+  
+    sideOffsetX = X_OFFSET_LEFT_DISTANCE_INCHES; 
+    sideOffsetY = Y_OFFSET_LEFT_DISTANCE_INCHES;
+    
+    sideVX      = -sideVectX; 
+    sideVY      = -sideVectY; 
 
   } else if (rightDist.isObjectDetected()) {
-    sideVal       = rightDist.objectDistance(vex::distanceUnits::in);
-    sideOffsetX   = X_OFFSET_RIGHT_DISTANCE_INCHES;
-    sideOffsetY   = Y_OFFSET_RIGHT_DISTANCE_INCHES;
+    sideVal     = rightDist.objectDistance(vex::distanceUnits::in);
+
+    sideOffsetX = X_OFFSET_RIGHT_DISTANCE_INCHES;
+    sideOffsetY = Y_OFFSET_RIGHT_DISTANCE_INCHES;
+    
+    sideVX      = sideVectX;  
+    sideVY      = sideVectY;  
 
   } else {
     printl("No Object Detected!");
   }
 
 
-  double distX;
-  double distY;
-  double triAngleX;
-  double triAngleY;
-  double triHypX;
-  double triHypY;
+  auto solvePos = [&](double offsetX, double offsetY, double vX, double vY, double dist, bool isSolvingForX) {
 
-  double sinTheta = sin(robotPose.theta);
-  
-  if (((robotPose.theta > M_PI/4) && (robotPose.theta < 3*M_PI/4)) || ((robotPose.theta > 5*M_PI/4) && (robotPose.theta < 7*M_PI/4))) {
-    distX         = frontVal * sinTheta;
-    distY         = sideVal  * sinTheta;
+    if (isSolvingForX) {
+      double wallX = (vX > 0) ? 72.0 : -72.0;
+      return wallX - (offsetX * sideVectX + offsetY * frontVectX + dist * vX);
 
-    triAngleX     = M_PI - atan(X_OFFSET_FRONT_DISTANCE_INCHES / Y_OFFSET_FRONT_DISTANCE_INCHES) - robotPose.theta;
-    triHypX       = sqrt((X_OFFSET_FRONT_DISTANCE_INCHES * X_OFFSET_FRONT_DISTANCE_INCHES) + (Y_OFFSET_FRONT_DISTANCE_INCHES * Y_OFFSET_FRONT_DISTANCE_INCHES));
+    } else {
+      double wallY = (vY > 0) ? 72.0 : -72.0;
+      return wallY - (offsetX * sideVectY + offsetY * frontVectY + dist * vY); 
+    }
+  };
 
-    triAngleY     = M_PI - atan(sideOffsetX / sideOffsetY) - robotPose.theta;
-    triHypY       = sqrt((sideOffsetX * sideOffsetX) + (sideOffsetY * sideOffsetY));
+
+  if (std::abs(frontVectY) >= std::abs(frontVectX)) {
+    robotPose.x = solvePos(sideOffsetX, sideOffsetY, sideVX, sideVY, sideVal, true);
+    robotPose.y = solvePos(X_OFFSET_FRONT_DISTANCE_INCHES, Y_OFFSET_FRONT_DISTANCE_INCHES, frontVectX, frontVectY, frontVal, false);
 
   } else {
-    distX         = sideVal  * sinTheta;
-    distY         = frontVal * sinTheta;
-
-    triAngleX     = M_PI - atan(sideOffsetX / sideOffsetY) - robotPose.theta;
-    triHypX       = sqrt((sideOffsetX * sideOffsetX) + (sideOffsetY * sideOffsetY));
-
-    triAngleY     = M_PI - atan(X_OFFSET_FRONT_DISTANCE_INCHES / Y_OFFSET_FRONT_DISTANCE_INCHES) - robotPose.theta;
-    triHypY       = sqrt((X_OFFSET_FRONT_DISTANCE_INCHES * X_OFFSET_FRONT_DISTANCE_INCHES) + (Y_OFFSET_FRONT_DISTANCE_INCHES * Y_OFFSET_FRONT_DISTANCE_INCHES));
+    robotPose.x = solvePos(X_OFFSET_FRONT_DISTANCE_INCHES, Y_OFFSET_FRONT_DISTANCE_INCHES, frontVectX, frontVectY, frontVal, true);
+    robotPose.y = solvePos(sideOffsetX, sideOffsetY, sideVX, sideVY, sideVal, false);
   }
 
-
-  robotPose.x     = sin(triAngleX) * triHypX;
-  robotPose.y     = cos(triAngleY) * triHypY;
-  
-  robotPose.x    -= 72; // Adjust coordinate center to be the middle of field
-  robotPose.y    -= 72;
-
-  printl(distX << "    " << distY << "      " << robotPose.theta << "    " << robotPose.x << "    " << robotPose.y);
-
+  //printl(robotPose.theta << "    " << robotPose.x << "    " << robotPose.y);
   return robotPose;
 }
 

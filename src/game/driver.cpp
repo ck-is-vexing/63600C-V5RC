@@ -8,7 +8,7 @@ double speedModifier    = 1.0;
 int alignerCooldownTime = 0;
 
 namespace {
-  constexpr int MAX_ALIGNER_SECONDS              = 2;
+  constexpr int MAX_ALIGNER_SECONDS              = 1;
   constexpr int ALIGNER_FORCE_TOGGLE_COOLDOWN_MS = 1000;
 
   constexpr int MAIN_LOOP_LENGTH_MS              = 20;
