@@ -26,7 +26,7 @@ void pre_auton(void) {
   leftDrive.setStopping(coast);
   rightDrive.setStopping(coast);
   redirect.setTo(true);
-  odomRetract.setTo(false);
+  odomRetract.setTo(true);
 
   sortColor.setLight(ledState::on);
   preloadColor.setLight(ledState::on);
@@ -59,7 +59,7 @@ void pre_auton(void) {
   
   if (global::debugMode) {
     pose::odom::initTicker();
-    pose::render::initTicker();
+    //pose::render::initTicker();
   }
 
   preAutonCompletion = true;
@@ -69,6 +69,7 @@ void pre_auton(void) {
 void autonomous(void) {
   printl("Auton Init");
 
+  pose::odom::initTicker();
   wing.setTo(true); // So it doesn't get stuck on things
 
   switch (preAuton::autonSelection) {
@@ -76,7 +77,7 @@ void autonomous(void) {
     case autonomousTypes::RIGHT:    auton::right();
     case autonomousTypes::WINPOINT: auton::winpoint();
     case autonomousTypes::TWO_INCH: auton::twoInch();
-    case autonomousTypes::SKILLS:   auton::skills();
+    case autonomousTypes::SKILLS:   auton::skillsMid();
     case autonomousTypes::NONE:     break;
   }
 }
@@ -91,10 +92,6 @@ void usercontrol(void) {
     }
   }
 
-  if (global::debugMode == false) {
-    odomRetract.setTo(true);
-  }
-
   printl("Driver Init");
 
   // Intake failsafe
@@ -106,15 +103,15 @@ void usercontrol(void) {
   leftDrive.spin(fwd, 0, pct);
   rightDrive.spin(fwd, 0, pct);
 
+  if (global::debugMode == false) {
+    odomRetract.setTo(false);
+  }
+
 
   while (true == true /* A statement that is true */) { 
 
     // Manual autonomous trigger used for testing
     if (Controller1.ButtonX.pressing() && global::debugMode == true){
-
-      bot.driveTo(pose::Pose(-40, -40, 90));
-
-      /*auton::PIDTest();
       
       wing.setTo(true); // So it doesn't get stuck on things
       
@@ -123,10 +120,10 @@ void usercontrol(void) {
         case autonomousTypes::RIGHT:    auton::right();
         case autonomousTypes::WINPOINT: auton::winpoint();
         case autonomousTypes::TWO_INCH: auton::twoInch();
-        case autonomousTypes::SKILLS:   auton::skills();
+        case autonomousTypes::SKILLS:   auton::skillsMid();
         case autonomousTypes::NONE:     break;
-      }*/
-      
+      }
+
       wait(5, sec);
       leftDrive.spin(fwd, 0, pct);
       rightDrive.spin(fwd, 0, pct);

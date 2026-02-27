@@ -15,6 +15,7 @@ namespace {
   /// @brief Thread function which detects the end of preloading blocks into the intake
   int preloadChecker() {
     printl("Preload Thread Init");
+    intake::isPreloading = true;
 
     while (true) {
 
@@ -31,14 +32,14 @@ namespace {
       }
 
       // Failsafe exit
-      if (Controller1.ButtonL1.pressing() || Controller1.ButtonL2.pressing() || Controller1.ButtonR1.pressing() || Controller1.ButtonR2.pressing()) {
+      if (!intake::isPreloading) {
         intakeLower.stop(brake);
         intakeBack.stop(brake);
         intakeUpper.stop(brake);
         hopper.stop(brake);
         
         intake::alignerTicker = -1000000;
-        intake::isPreloading = false;
+
         break;
       }
 
@@ -84,7 +85,6 @@ namespace {
 }
 
 void intake::preload() {
-  isPreloading = true;
 
   intakeLower.spin(fwd, 10, pct);
   intakeBack.spin(fwd, 15, pct);

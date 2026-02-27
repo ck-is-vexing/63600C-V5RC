@@ -19,8 +19,8 @@ class PID {
     double Kd;
     double integral = 0;
     double derivative;
-    int dT;
-    bool rF; // Toggle for rotational error fix
+    int    dT;
+    bool   rF; // Toggle for rotational error fix
   public:
     double oldError; // The previous error, used for calculating Integral
 
@@ -53,14 +53,14 @@ class PID {
     /**
      * @brief Update PID tuning values
      * 
-     * @param proportional Proportional tuning value
-     * @param integral Integral tuning value
-     * @param derivative Derivative tuning value
+     * @param proportionalTuning Proportional tuning value
+     * @param integralTuning Integral tuning value
+     * @param derivativeTuning Derivative tuning value
      */
-    void setTuning(double proportional, double integral, double derivative);
+    void setTuning(double proportionalTuning, double integralTuning, double derivativeTuning);
 
     /**
-     * @brief Resets values of the PID Controller, use when setpoint changes
+     * @brief Resets values of the PID Controller; use when setpoint changes
      * 
      */
     void reset();

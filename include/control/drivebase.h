@@ -43,6 +43,30 @@ class Drivebase {
     void drive(vex::directionType direction, double inches, int velocityPercent = 60);
 
     /**
+     * @brief Drive the robot with a constant speed
+     * 
+     * @param direction VEX directionType, forwards or backwards
+     * @param velocity Speed to drive
+     * @param velocityUnit Unit for velocity
+     */
+    void drive(vex::directionType direction, int velocity, vex::velocityUnits velocityUnit);
+
+    
+    /**
+     * @brief Stop the drivetrain
+     * 
+     */
+    void stop();
+
+    /**
+     * @brief Stop the drivetrain
+     * 
+     * @param brakingType VEX brakeType to stop with
+     */
+    void stop(vex::brakeType brakingType);
+
+
+    /**
      * @brief Turn the drivetrain quickly and precisely to a field-orientated angle
      * 
      * Uses a recursive PID algorithm to turn the robot to the desired angle.
@@ -54,7 +78,21 @@ class Drivebase {
      * @param recursions Maximum number of individual attempts
      * @param minimumSpeed Lowest percentage speed the drivetrain will turn at
      */
-    void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5, double minimumSpeed = 1.8);
+    void turnTo(double desiredAngle, double precision = 0.5, double secondsAllowed = 2, int recursions = 5);
+
+    /**
+     * @brief Turn the drivetrain quickly and precisely to face a point on the field
+     * 
+     * Uses a recursive PID algorithm to face the robot at the desired point
+     * Tuning is applied inside of drivebase.cpp.
+     *
+     * @param desiredPoint desired (x, y) to point to, in inches
+     * @param precision Amount of error in degrees that is accepted
+     * @param secondsAllowed Maximum time to recursively turn
+     * @param recursions Maximum number of individual attempts
+     * @param minimumSpeed Lowest percentage speed the drivetrain will turn at
+     */
+    void pointTo(pose::Pos desiredPoint, double precision = 0.5, double secondsAllowed = 2, int recursions = 5);
 
     /**
      * @brief Drive forwards or backwards quickly and precisely
@@ -77,12 +115,12 @@ class Drivebase {
     /**
      * @brief Drive the robot to precise coordinates on the field
      *
-     * @param desiredPose desired (x, y, theta). Coords in inches, angle in degrees
+     * @param desiredPos desired (x, y). Coords in inches, angle in degrees
      * @param precision Amount of error for each element of robot pose. Positional precision in inches, angle in degrees.
      * @param secondsAllowed Maximum time to recursively drive
      * @param recursions Maximum number of individual attempts
      */
-    void driveTo(pose::Pose desiredPose, pose::Pose precision = pose::Pose(1, 1, 5), double secondsAllowed = 10, int recursions = 5, double minimumSpeed = 1.8);
+    void driveTo(pose::Pos desiredPos, pose::Pos precision = pose::Pos(1, 1), double secondsAllowed = 10, int recursions = 5, double minimumSpeed = 1.8);
 
     /**
      * @brief Demo function for PID

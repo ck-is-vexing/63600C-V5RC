@@ -24,10 +24,10 @@ double PID::update(double setpoint, double pv) {
   return (Kp * error) + (Ki * integral) + (Kd * derivative);
 }
 
-void PID::setTuning(double proportional, double integral, double derivative) {
-  Kp = proportional;
-  Ki = integral;
-  Kd = derivative;
+void PID::setTuning(double proportionalTuning, double integralTuning, double derivativeTuning) {
+  Kp = proportionalTuning;
+  Ki = integralTuning;
+  Kd = derivativeTuning;
 }
 
 void PID::reset() {

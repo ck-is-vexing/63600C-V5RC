@@ -21,6 +21,20 @@ namespace pose {
 
     Pose(double x, double y, double theta);
   };
+
+  /**
+   * @brief Robot Pos struct
+   * (x, y)
+   * 
+   */
+  struct Pos {
+    double x;
+    double y;
+
+    Pos();
+
+    Pos(double x, double y);
+  };
   
   /// Starting position of robot
   extern Pose startingPose;
@@ -62,6 +76,13 @@ namespace pose {
      * @return Pose 
      */
     const Pose getPose();
+    
+    /**
+     * @brief Set the odometry robot pose
+     * 
+     * @param pose Pose to set odometry to
+     */
+    void setPose(pose::Pose pose);
 
     /**
      * @brief Initialize background odometry calculations

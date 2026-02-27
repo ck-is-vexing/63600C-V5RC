@@ -23,6 +23,7 @@ void driver::registerEvents() {
 
   Controller1.ButtonLeft.pressed(  []() { redirect.toggle(true);                                      });
   Controller1.ButtonRight.pressed( []() { wing.toggle(true);                                          });
+  Controller1.ButtonUp.pressed(    []() { pose::Pose curPose = pose::odom::getPose(); printl(curPose.x << "    " << curPose.y << "    " << curPose.theta); });
 
   // Secondary controller
   Controller2.ButtonL1.pressed(    []() { global::yourColor = colorType::BLUE; intake::initSorting(); });
@@ -52,33 +53,34 @@ void driver::checkInputs() {
     }
 
   } else if (Controller1.ButtonR1.pressing()) {
-    intake::scoreLongGoal(100 * speedModifier);
+    intake::isPreloading  = false;
     intake::alignerTicker = 0;
     aligner.setTo(true);
+    intake::scoreLongGoal(100 * speedModifier);
 
   } else if (Controller1.ButtonR2.pressing()) {
-    intake::scoreCenterGoal(100 * speedModifier, 50 * speedModifier);
+    intake::isPreloading  = false;
     intake::alignerTicker = 0;
     aligner.setTo(true);
+    intake::scoreCenterGoal(100 * speedModifier, 50 * speedModifier);
   
   } else if (Controller1.ButtonL1.pressing()) {
+    intake::isPreloading  = false;
     intake::store(100);
 
   } else if (Controller1.ButtonL2.pressing()) {
-    intake::scoreLowGoal(100 * speedModifier); // 50 for driver skills program, 100 normally
+    intake::isPreloading  = false;
+    intake::scoreLowGoal(50 * speedModifier); // 50 for driver skills program, 100 normally
 
   } else if (Controller1.ButtonA.pressing() ) {
+    intake::isPreloading  = false;
     intake::outtake(100 * speedModifier);
 
   } else {
     intake::stop(coast);
   }
 
-  if (Controller1.ButtonDown.pressing()) {
-    speedModifier = 0.5;
-  } else {
-    speedModifier = 1;
-  }
+  speedModifier = (Controller1.ButtonDown.pressing()) ? 0.5 : 1;
 
 
   if ((intake::alignerTicker > MAX_ALIGNER_TIME) && !intake::isPreloading) {

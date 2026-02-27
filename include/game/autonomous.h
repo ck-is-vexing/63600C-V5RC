@@ -39,6 +39,12 @@ namespace auton {
   void skills();
 
   /**
+   * @brief Skills competition autonomous with middle goal scoring
+   *
+   */
+  void skillsMid();
+
+  /**
    * @brief Test a couple different turnTo PID angles
    * @note Used for tuning and debugging
    *

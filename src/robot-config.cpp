@@ -29,7 +29,7 @@ Pneumatic    redirect      = Pneumatic(Brain.ThreeWirePort.D, true);
 Pneumatic    matchLoadMech = Pneumatic(Brain.ThreeWirePort.B);
 Pneumatic    wing          = Pneumatic(Brain.ThreeWirePort.C);
 Pneumatic    aligner       = Pneumatic(Brain.ThreeWirePort.E);
-Pneumatic    odomRetract   = Pneumatic(Brain.ThreeWirePort.F); // For this pneumatic, true means retracted, false means down
+Pneumatic    odomRetract   = Pneumatic(Brain.ThreeWirePort.F); // For this pneumatic, false means retracted, true means down
 
 // Sensors
 gps          GPS           = gps(PORT7, 359);

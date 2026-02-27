@@ -12,14 +12,16 @@ namespace {
 
   constexpr double RAD_TO_DEG      = (180  / M_PI);
   constexpr double DEG_TO_RAD      = (M_PI / 180);
+
+  constexpr double ANGLE_COORDINATE_TRANSFORMATION = (3*M_PI/2);
 }
 
 Drivebase::Drivebase(vex::motor_group& leftMotors, vex::motor_group& rightMotors, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
 : ld(leftMotors), rd(rightMotors), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
-  headingPID(0.5, 0.0001, 25, 10, true),
-  drivePID(1.4, 0, 20, 10) {}
+  headingPID(0.55, 0.0001, 20, 10, true), // 0.57 0 16
+  drivePID(2.8, 0.0001, 10, 10) {}
 
-void Drivebase::drive(directionType direction, double inches, int velocityPercent) {
+void Drivebase::drive(vex::directionType direction, double inches, int velocityPercent) {
 
   double motorDegrees = inches / (INCH_CONVERSION);
 
@@ -30,7 +32,25 @@ void Drivebase::drive(directionType direction, double inches, int velocityPercen
   rd.stop(brake);
 }
 
-void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllowed, int recursions, double minimumSpeed) {
+void Drivebase::drive(vex::directionType direction, int velocity, vex::velocityUnits velocityUnit) {
+  ld.spin(fwd, velocity, velocityUnit);
+  rd.spin(fwd, velocity, velocityUnit);
+}
+
+
+void Drivebase::stop() {
+  ld.stop(coast);
+  rd.stop(coast);
+}
+
+void Drivebase::stop(vex::brakeType brakingType) {
+  ld.stop(brakingType);
+  rd.stop(brakingType);
+}
+
+
+void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllowed, int recursions) {
+  constexpr double MINIMUM_SPEED = 2.5;
   
   headingPID.reset();
   double currentAngle;
@@ -42,14 +62,14 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
       double speed = headingPID.update(desiredAngle, currentAngle);
       
       // Represents the realistic abilities of VEX motors
-      if (std::abs(speed) < minimumSpeed) {
-        speed = std::copysign(minimumSpeed, speed);
+      if (std::abs(speed) <= MINIMUM_SPEED) {
+        speed = std::copysign(MINIMUM_SPEED, speed);
       }
 
       ld.spin(fwd, speed, pct);
       rd.spin(reverse, speed, pct);
 
-      if ((currentAngle < (desiredAngle + precision) && currentAngle > (desiredAngle - precision)) ||
+      if ((currentAngle < (desiredAngle + precision)       && currentAngle > (desiredAngle - precision))       ||
           (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
           (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ) {
 
@@ -59,12 +79,12 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
       wait(10, msec); 
     }
 
-    ld.stop(hold);
-    rd.stop(hold);
+    ld.stop(brake);
+    rd.stop(brake);
     headingPID.reset();
 
     // In case drivetrain is still in motion and moves away from setpoint
-    wait(100, msec);
+    wait(50, msec);
 
     currentAngle = inert.heading();
 
@@ -72,12 +92,22 @@ void Drivebase::turnTo(double desiredAngle, double precision, double secondsAllo
         (currentAngle < (desiredAngle + precision - 360) && currentAngle > (desiredAngle - precision - 360)) ||
         (currentAngle < (desiredAngle + precision + 360) && currentAngle > (desiredAngle - precision + 360)) ) {
     
-      ld.stop(coast);
-      rd.stop(coast);
+      ld.stop(brake);
+      rd.stop(brake);
       break;
     }  
     // If the correct angle was not achieved, the code will recurse
   }
+}
+
+void Drivebase::pointTo(pose::Pos desiredPoint, double precision, double secondsAllowed, int recursions) {
+
+  pose::Pose curPose  =  pose::odom::getPose();
+  double desiredAngle = (ANGLE_COORDINATE_TRANSFORMATION - atan2( (desiredPoint.y - curPose.y), (desiredPoint.x - curPose.x) )) * RAD_TO_DEG;
+
+  desiredAngle        = std::remainder(desiredAngle, 360);
+
+  Drivebase::turnTo(desiredAngle, precision, secondsAllowed, recursions);
 }
 
 void Drivebase::driveTo(vex::directionType direction, double desiredInches, double desiredAngle, double precision, double secondsAllowed, int recursions, double minSpeed) {
@@ -140,11 +170,10 @@ void Drivebase::driveTo(vex::directionType direction, double desiredInches, doub
   }
 }
 
-void Drivebase::driveTo(pose::Pose desiredPose, pose::Pose precision, double secondsAllowed, int recursions, double minimumSpeed) {
+void Drivebase::driveTo(pose::Pos desiredPos, pose::Pos precision, double secondsAllowed, int recursions, double minimumSpeed) {
   constexpr double ANGLE_SPEED_MODIFIER            = 1.5;
 
   constexpr double REVERSAL_THRESHOLD_ANGLE        = (3*M_PI/4);
-  constexpr double ANGLE_COORDINATE_TRANSFORMATION = (3*M_PI/2);
 
 
   headingPID.reset();
@@ -155,8 +184,11 @@ void Drivebase::driveTo(pose::Pose desiredPose, pose::Pose precision, double sec
     for (int t = 0; t < (secondsAllowed * 100); t++) {
 
       curPose             = pose::odom::getPose();
-      double pv           = sqrt( (desiredPose.y - curPose.y) * (desiredPose.y - curPose.y) + (desiredPose.x - curPose.x) * (desiredPose.x - curPose.x) );
-      double angleToPoint = (ANGLE_COORDINATE_TRANSFORMATION - atan2( (desiredPose.y - curPose.y), (desiredPose.x - curPose.x) ));
+      double deltaX       = (desiredPos.x - curPose.x);
+      double deltaY       = (desiredPos.y - curPose.y);
+
+      double pv           = sqrt( (deltaY * deltaY) + (deltaX * deltaX) );
+      double angleToPoint = (ANGLE_COORDINATE_TRANSFORMATION - atan2( deltaY, deltaX ));
 
 
       angleToPoint = std::fmod(angleToPoint, 2*M_PI);
@@ -189,31 +221,32 @@ void Drivebase::driveTo(pose::Pose desiredPose, pose::Pose precision, double sec
       rd.spin(fwd, ((driveSpeed * reversalMod) - (angleSpeed * ANGLE_SPEED_MODIFIER)), pct);
 
 
-      if ((pv * pv) < (precision.x * precision.y)) { printl("tickLoop done!"); break; }
+      if ((pv * pv) < (precision.x * precision.y)) { break; }
       
       wait(10, msec); 
     }
 
 
-    ld.stop(hold);
-    rd.stop(hold);
+    ld.stop(brake);
+    rd.stop(brake);
     headingPID.reset();
     drivePID.reset();
 
     // In case drivetrain is still in motion and moves away from setpoint
-    wait(100, msec);
+    wait(50, msec);
+
+    double deltaX    = (desiredPos.x - curPose.x);
+    double deltaY    = (desiredPos.y - curPose.y);
     
-    curPose          = pose::odom::getPose();
-    double pvSquared = (desiredPose.y - curPose.y) * (desiredPose.y - curPose.y) + (desiredPose.x - curPose.x) * (desiredPose.x - curPose.x);
+    curPose          =  pose::odom::getPose();
+    double pvSquared = (deltaY * deltaY) + (deltaX * deltaX);
 
     if (pvSquared < (precision.x * precision.y)) {
-      ld.stop(coast);
-      rd.stop(coast);
+      ld.stop(brake);
+      rd.stop(brake);
       break;
     }
   }
-
-  //turnTo(desiredPose.theta, precision.theta);
 }
 
 void Drivebase::demoTo(double desiredAngle) {

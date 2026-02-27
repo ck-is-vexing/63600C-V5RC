@@ -13,14 +13,15 @@ preAuton::StartModifier::StartModifier(int _x, int _y, int _sideAngle, bool _fli
 
 
 preAuton::StartModifier preAuton::startingGPS = preAuton::StartModifier(1, 1, 180, false);
-double preAuton::inertialAngle = 0;
-autonomousTypes preAuton::autonSelection = autonomousTypes::NONE;
+double preAuton::inertialAngle                = 0;
+autonomousTypes preAuton::autonSelection      = autonomousTypes::NONE;
 
 
 void preAuton::autonSelector() {
 
   if (global::debugMode) {
-    global::yourColor = colorType::NONE;
+    global::yourColor               = colorType::NONE;
+    preAuton::autonSelection        = autonomousTypes::SKILLS;
     preAuton::startingGPS.sideAngle = 270;
 
   } else {
@@ -200,7 +201,7 @@ void preAuton::autonSelector() {
 void preAuton::sensorCalibration(double averageSeconds) {
 
   printl("GPS Quality: " << GPS.quality());
-  if (GPS.quality() < 100) { Brain.Screen.clearScreen(vex::color::red); }
+  if (GPS.quality() < 100) { Brain.Screen.clearScreen(vex::color::red); wait(2, sec); }
 
   double averagedTheta = 0;
   int    i;
@@ -235,10 +236,11 @@ void preAuton::sensorCalibration(double averageSeconds) {
   Controller1.Screen.print("Inertial Calibrated!");
 
 
-  pose::Pose curPose       = pose::calcPoseDist();
+  const pose::Pose curPose = pose::calcPoseDist();
 
   pose::startingPose       = curPose;
   pose::startingPose.theta = averagedTheta;
-
+  
+  pose::render::renderRobot();
   printl("\n" << "( " << pose::startingPose.x << ", " << pose::startingPose.y << ", " << pose::startingPose.theta << " )");
 }

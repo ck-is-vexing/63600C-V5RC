@@ -42,21 +42,21 @@ namespace {
 
     while (true) {
 
-      odometryPose.theta   =  fmod( (imu.heading() * PI_OVER_180), 2*M_PI );
-      double triTheta      =  odometryPose.theta - M_PI;
+      odometryPose.theta         =  fmod( (imu.heading() * PI_OVER_180), 2*M_PI );
+      const double triTheta      =  odometryPose.theta - M_PI;
 
-      double forwardAngle  =  odomForward.position(vex::rotationUnits::deg);
-      double sideAngle     =  odomSide.position(vex::rotationUnits::deg);
+      const double forwardAngle  =  odomForward.position(vex::rotationUnits::deg);
+      const double sideAngle     =  odomSide.position(vex::rotationUnits::deg);
 
-      double forwardIn     = (forwardAngle - oldForwardAngle) * PI_OVER_180;
-      double sideIn        = (sideAngle    - oldSideAngle   ) * PI_OVER_180;
+      const double forwardIn     = (forwardAngle - oldForwardAngle) * PI_OVER_180;
+      const double sideIn        = (sideAngle    - oldSideAngle   ) * PI_OVER_180;
 
       
-      double forwardDeltaX =  sin(triTheta)  * forwardIn;
-      double sideDeltaX    =  cos(-triTheta) * sideIn;
+      const double forwardDeltaX =  sin(triTheta)  * forwardIn;
+      const double sideDeltaX    =  cos(-triTheta) * sideIn;
 
-      double forwardDeltaY =  cos(triTheta)  * forwardIn;
-      double sideDeltaY    =  sin(-triTheta) * sideIn;
+      const double forwardDeltaY =  cos(triTheta)  * forwardIn;
+      const double sideDeltaY    =  sin(-triTheta) * sideIn;
       
 
       odometryPose.x      += (forwardDeltaX  + sideDeltaX);
@@ -82,9 +82,8 @@ namespace {
     while (true) {
 
       pose::render::renderRobot();
-      //printl(odometryPose.x << "    " << odometryPose.y << "      " << odometryPose.theta);
-      if (!renderRunning) { break; }
 
+      if (!renderRunning) { break; }
       wait(100, msec);
     }
 
@@ -100,6 +99,11 @@ pose::Pose::Pose()
 pose::Pose::Pose(double _x, double _y, double _theta)
 : x(_x), y(_y), theta(_theta) {}
 
+pose::Pos::Pos()
+: x(0.0), y(0.0) {}
+
+pose::Pos::Pos(double _x, double _y)
+: x(_x), y(_y) {}
 
 pose::Pose pose::startingPose;
 
@@ -107,20 +111,20 @@ pose::Pose pose::startingPose;
 pose::Pose pose::calcPoseGPS() {
   pose::Pose robotPose;
 
-  robotPose.theta = fmod( (imu.heading() * PI_OVER_180), 2*M_PI );
+  robotPose.theta       = fmod( (imu.heading() * PI_OVER_180), 2*M_PI );
 
-  double triAngle = M_PI - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - robotPose.theta;
-  double triHyp   = sqrt((X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES) + (Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES));
+  const double triAngle = M_PI - atan(X_OFFSET_GPS_INCHES / Y_OFFSET_GPS_INCHES) - robotPose.theta;
+  const double triHyp   = sqrt((X_OFFSET_GPS_INCHES * X_OFFSET_GPS_INCHES) + (Y_OFFSET_GPS_INCHES * Y_OFFSET_GPS_INCHES));
 
-  double offsetX  = sin(triAngle) * triHyp;
-  double offsetY  = cos(triAngle) * triHyp;
+  const double offsetX  = sin(triAngle) * triHyp;
+  const double offsetY  = cos(triAngle) * triHyp;
   
   if (preAuton::startingGPS.flip) {
-    robotPose.y   = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
-    robotPose.x   = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
+    robotPose.y         = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
+    robotPose.x         = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
   } else {
-    robotPose.x   = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
-    robotPose.y   = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
+    robotPose.x         = (GPS.xPosition(distanceUnits::in) * preAuton::startingGPS.x + offsetX);
+    robotPose.y         = (GPS.yPosition(distanceUnits::in) * preAuton::startingGPS.y + offsetY);
   }
 
   return robotPose;
@@ -131,23 +135,25 @@ pose::Pose pose::calcPoseDist() {
   
   robotPose.theta   =  fmod((imu.heading() * PI_OVER_180), 2 * M_PI);
   
-  double sinTheta   =  sin(robotPose.theta);
-  double cosTheta   =  cos(robotPose.theta);
+  const double sinTheta   =  sin(robotPose.theta);
+  const double cosTheta   =  cos(robotPose.theta);
 
-  double frontVectX = -sinTheta;
-  double frontVectY = -cosTheta;
-  double sideVectX  = -cosTheta;
-  double sideVectY  =  sinTheta;
+  const double frontVectX = -sinTheta;
+  const double frontVectY = -cosTheta;
+  const double sideVectX  = -cosTheta;
+  const double sideVectY  =  sinTheta;
 
 
-  double frontVal   = frontDist.objectDistance(vex::distanceUnits::in);
+  const double frontVal   = frontDist.objectDistance(vex::distanceUnits::in);
+  const double leftVal    = leftDist.objectDistance(vex::distanceUnits::in);
+  const double rightVal   = rightDist.objectDistance(vex::distanceUnits::in);
 
   double sideVal;
   double sideOffsetX, sideOffsetY;
   double sideVX, sideVY;
 
-  if (leftDist.isObjectDetected()) {
-    sideVal     = leftDist.objectDistance(vex::distanceUnits::in);
+  if        (leftVal < rightVal) {
+    sideVal     = leftVal;
   
     sideOffsetX = X_OFFSET_LEFT_DISTANCE_INCHES; 
     sideOffsetY = Y_OFFSET_LEFT_DISTANCE_INCHES;
@@ -155,8 +161,8 @@ pose::Pose pose::calcPoseDist() {
     sideVX      = -sideVectX; 
     sideVY      = -sideVectY; 
 
-  } else if (rightDist.isObjectDetected()) {
-    sideVal     = rightDist.objectDistance(vex::distanceUnits::in);
+  } else if (rightVal < leftVal) {
+    sideVal     = rightVal;
 
     sideOffsetX = X_OFFSET_RIGHT_DISTANCE_INCHES;
     sideOffsetY = Y_OFFSET_RIGHT_DISTANCE_INCHES;
@@ -172,12 +178,12 @@ pose::Pose pose::calcPoseDist() {
   auto solvePos = [&](double offsetX, double offsetY, double vX, double vY, double dist, bool isSolvingForX) {
 
     if (isSolvingForX) {
-      double wallX = (vX > 0) ? 72.0 : -72.0;
-      return wallX - (offsetX * sideVectX + offsetY * frontVectX + dist * vX);
+      const double wallX = (vX > 0) ? 72.0 : -72.0;
+      return (wallX - (offsetX * sideVectX + offsetY * frontVectX + dist * vX));
 
     } else {
-      double wallY = (vY > 0) ? 72.0 : -72.0;
-      return wallY - (offsetX * sideVectY + offsetY * frontVectY + dist * vY); 
+      const double wallY = (vY > 0) ? 72.0 : -72.0;
+      return (wallY - (offsetX * sideVectY + offsetY * frontVectY + dist * vY)); 
     }
   };
 
@@ -198,6 +204,10 @@ pose::Pose pose::calcPoseDist() {
 
 const pose::Pose pose::odom::getPose() {
   return odometryPose;
+}
+
+void pose::odom::setPose(pose::Pose pose) {
+  odometryPose = pose;
 }
 
 void pose::odom::initTicker() {
@@ -242,24 +252,24 @@ void pose::render::renderRobot() {
   // Draw robot vector
   constexpr int VECTOR_LENGTH_PIXELS = 40;
 
-  pose::Pose pose_gps  = calcPoseGPS();
-  pose::Pose pose_odom = odom::getPose();
-  pose::Pose pose_dist = calcPoseDist();
+  const pose::Pose pose_gps  = calcPoseGPS();
+  const pose::Pose pose_odom = odom::getPose();
+  const pose::Pose pose_dist = calcPoseDist();
 
-  double x_gps         = pose_gps.x  * 5/3; // Convert inches to pixels
-  double y_gps         = pose_gps.y  * 5/3;
-  double x2_gps        = x_gps  + sin(pose_gps.theta - M_PI)  * VECTOR_LENGTH_PIXELS;
-  double y2_gps        = y_gps  + cos(pose_gps.theta - M_PI)  * VECTOR_LENGTH_PIXELS;
+  const double x_gps         = pose_gps.x  * 5/3; // Convert inches to pixels
+  const double y_gps         = pose_gps.y  * 5/3;
+  const double x2_gps        = x_gps  + sin(pose_gps.theta - M_PI)  * VECTOR_LENGTH_PIXELS;
+  const double y2_gps        = y_gps  + cos(pose_gps.theta - M_PI)  * VECTOR_LENGTH_PIXELS;
 
-  double x_odom        = pose_odom.x * 5/3;
-  double y_odom        = pose_odom.y * 5/3;
-  double x2_odom       = x_odom + sin(pose_odom.theta - M_PI) * VECTOR_LENGTH_PIXELS;
-  double y2_odom       = y_odom + cos(pose_odom.theta - M_PI) * VECTOR_LENGTH_PIXELS;
+  const double x_odom        = pose_odom.x * 5/3;
+  const double y_odom        = pose_odom.y * 5/3;
+  const double x2_odom       = x_odom + sin(pose_odom.theta - M_PI) * VECTOR_LENGTH_PIXELS;
+  const double y2_odom       = y_odom + cos(pose_odom.theta - M_PI) * VECTOR_LENGTH_PIXELS;
 
-  double x_dist        = pose_dist.x * 5/3;
-  double y_dist        = pose_dist.y * 5/3;
-  double x2_dist       = x_dist + sin(pose_dist.theta - M_PI) * VECTOR_LENGTH_PIXELS;
-  double y2_dist       = y_dist + cos(pose_dist.theta - M_PI) * VECTOR_LENGTH_PIXELS;
+  const double x_dist        = pose_dist.x * 5/3;
+  const double y_dist        = pose_dist.y * 5/3;
+  const double x2_dist       = x_dist + sin(pose_dist.theta - M_PI) * VECTOR_LENGTH_PIXELS;
+  const double y2_dist       = y_dist + cos(pose_dist.theta - M_PI) * VECTOR_LENGTH_PIXELS;
 
   Brain.Screen.setPenWidth(6);
 
