@@ -68,6 +68,7 @@ namespace {
       oldForwardAngle      =  forwardAngle;
       oldSideAngle         =  sideAngle;
 
+      //printl("\n" << "( " << odometryPose.x << ", " << odometryPose.y << ", " << odometryPose.theta << " )");
       wait (10, msec);
     }
 

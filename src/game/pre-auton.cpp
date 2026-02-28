@@ -25,7 +25,6 @@ void preAuton::autonSelector() {
     preAuton::startingGPS.sideAngle = 270;
 
   } else {
-
     constexpr unsigned int MAX_SECONDS = 30;
 
     // Select the team color -----------------------------------------------
@@ -176,6 +175,7 @@ void preAuton::autonSelector() {
     }
   }
 
+
   if        (preAuton::startingGPS.sideAngle == 0)   {
     preAuton::startingGPS.x    = -1;
     preAuton::startingGPS.y    = -1;
@@ -243,4 +243,14 @@ void preAuton::sensorCalibration(double averageSeconds) {
   
   pose::render::renderRobot();
   printl("\n" << "( " << pose::startingPose.x << ", " << pose::startingPose.y << ", " << pose::startingPose.theta << " )");
+
+  wait(2, sec);
+
+  Controller1.Screen.clearScreen();
+  Controller1.Screen.setCursor(1, 1);
+  Controller1.Screen.print("X: ");
+  Controller1.Screen.print(pose::startingPose.x);
+  Controller1.Screen.setCursor(2, 1);
+  Controller1.Screen.print("Y: ");
+  Controller1.Screen.print(pose::startingPose.y);
 }

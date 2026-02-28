@@ -58,7 +58,7 @@ void pre_auton(void) {
 
   
   if (global::debugMode) {
-    pose::odom::initTicker();
+    //pose::odom::initTicker();
     //pose::render::initTicker();
   }
 
@@ -105,6 +105,7 @@ void usercontrol(void) {
 
   if (global::debugMode == false) {
     odomRetract.setTo(false);
+    pose::odom::killTicker();
   }
 
 
@@ -112,9 +113,12 @@ void usercontrol(void) {
 
     // Manual autonomous trigger used for testing
     if (Controller1.ButtonX.pressing() && global::debugMode == true){
-      
+
       wing.setTo(true); // So it doesn't get stuck on things
-      
+
+      auton::PIDTest();
+      wait(100, sec);
+
       switch (preAuton::autonSelection) {
         case autonomousTypes::LEFT:     auton::left();
         case autonomousTypes::RIGHT:    auton::right();

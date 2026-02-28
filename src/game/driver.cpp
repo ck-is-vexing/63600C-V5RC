@@ -70,7 +70,7 @@ void driver::checkInputs() {
 
   } else if (Controller1.ButtonL2.pressing()) {
     intake::isPreloading  = false;
-    intake::scoreLowGoal(50 * speedModifier); // 50 for driver skills program, 100 normally
+    intake::scoreLowGoal(100 * speedModifier); // 50 for driver skills program, 100 normally
 
   } else if (Controller1.ButtonA.pressing() ) {
     intake::isPreloading  = false;

@@ -5,105 +5,151 @@
 #include "definition.h"
 
 void auton::left() {
-  bot.drive(fwd, 31, 40);
+  printl("Left!");
+
+  // First match loader
+  bot.driveTo(pose::Pos(-47, -48));
+  matchLoadMech.setTo(true);
+  intake::store(100);
 
   bot.turnTo(0, 2);
 
-  matchLoadMech.setTo(true);
-  redirect.setTo(true);
-  intakeLower.spin(fwd, 100, pct);
-  intakeBack.spin(fwd, 100, pct);
-  intakeUpper.spin(fwd, 100, pct);
+  bot.drive(fwd, 36, velocityUnits::pct);
+  wait(0.4, sec);
+  bot.drive(reverse, 100, velocityUnits::pct);
+  wait(100, msec);
+  bot.drive(fwd, 5, velocityUnits::pct);
+  wait(0.55, sec);
 
-  wait(0.3, sec); // Required for match loader to go down
-
-  bot.drive(fwd, 14, 40);
-  wait(0.5, sec);
-  bot.drive(reverse, 13, 100);
+  bot.stop();
+  bot.drive(reverse, 13, 60);
 
   matchLoadMech.setTo(false);
-  //intakeLower.stop(coast);
-  //intakeBack.stop(coast);
-  //intakeUpper.stop(coast);
 
-  bot.turnTo(177, 2);
-  bot.drive(fwd, 12.5, 40);
-
-  redirect.setTo(false);
-  intakeLower.spin(fwd, 100, pct);
-  intakeBack.spin(fwd, 100, pct);
-  intakeUpper.spin(fwd, 100, pct);
+  intakeLower.spin(fwd, 10, pct); // Manual preload
+  intakeBack.spin(fwd, 15, pct);  // The thread was bugging out
+  intakeUpper.spin(fwd, 10, pct);
   hopper.spin(fwd, 100, pct);
 
-  wait(1.9, sec);
-
-  intakeLower.stop(coast);
-  intakeBack.stop(coast);
-  intakeUpper.stop(coast);
-  hopper.stop(coast);
-
-  bot.drive(reverse, 8, 40);
-  bot.turnTo(235, 2);
-
-  redirect.setTo(true);
-  intakeLower.spin(fwd, 100, pct);
-  intakeBack.spin(fwd, 100, pct);
-  intakeUpper.spin(fwd, 100, pct);
-
-  bot.drive(fwd, 34, 80);
   
-  matchLoadMech.setTo(true);
-  bot.turnTo(223, 2);
+  // Score long goal
+  aligner.setTo(true);
+  bot.pointTo(pose::Pos(-46, -24), 3);
+  
+  bot.drive(fwd, 40, velocityUnits::pct);
+  intake::stop(brake);
+  wait(0.5, sec);
 
-  bot.drive(fwd, 11, 40); //11
+  intake::scoreLongGoal(100);
+  wait(1.5, sec);
 
-  leftDrive.stop(brake);
-  rightDrive.stop(brake);
+  bot.stop(coast);
+  intake::stop(coast);
 
-  intakeLower.spin(fwd, 100, pct);
-  intakeBack.spin(fwd, 100, pct);
-  intakeUpper.spin(reverse, 100, pct);
-  hopper.spin(fwd, 100, pct);  
 
-  wait(5, sec);
+  // Grab 3 blocks
+  bot.drive(reverse, 12, 50);
+
+  bot.pointTo(pose::Pos(-21, -24), 5);
+  intake::store(100);
+  bot.drive(fwd, 36, 30);
+
+
+  // Score mid goal
+  bot.pointTo(pose::Pos(0, -3), 3);
+  bot.drive(fwd, 20, velocityUnits::pct);
+  wait(1, sec);
+  bot.drive(fwd, 10, velocityUnits::pct);
+
+  intake::scoreCenterGoal(100, 80);
+  wait(1.5, sec);
+  intake::stop(coast);
+  bot.stop(coast);
+  aligner.setTo(false);
+  
+  // Goal rush
+  /*bot.drive(reverse, 50, 100);
+  bot.turnTo(180, 5);
+  wing.setTo(false);
+  bot.driveTo(pose::Pos(-60, -8));*/
+
+  wait(1000, sec);
 }
 
 void auton::right() {
-
-  // Grab 3 blocks
-  bot.pointTo(pose::Pos(24, -24), 3);
-  intake::store(100);
-  bot.driveTo(pose::Pos(24, -24));
-
-  wait(100, msec);
-
-  bot.pointTo(pose::Pos(48, -48), 5);
-
+  printl("Right!");
 
   // First match loader
-  bot.driveTo(pose::Pos(48, -48));
-  bot.turnTo(0, 2);
-
+  bot.driveTo(pose::Pos(45, -48));
   matchLoadMech.setTo(true);
   intake::store(100);
-  wait(0.3, sec); // Required for match loader to go down in time
+
+  bot.turnTo(0, 2);
 
   bot.drive(fwd, 40, velocityUnits::pct);
-  wait(2, sec);
+  wait(0.4, sec);
+  bot.drive(reverse, 100, velocityUnits::pct);
+  wait(100, msec);
+  bot.drive(fwd, 5, velocityUnits::pct);
+  wait(0.55, sec);
 
   bot.stop();
   bot.drive(reverse, 13, 60);
 
   matchLoadMech.setTo(false);
   wait(100, msec);
-  intake::stop(coast);
+
+  intakeLower.spin(fwd, 10, pct); // Manual preload
+  intakeBack.spin(fwd, 15, pct);  // The thread was bugging out
+  intakeUpper.spin(fwd, 10, pct);
+  hopper.spin(fwd, 100, pct);
 
   
   // Score long goal
-  bot.turnTo(0);
+  aligner.setTo(true);
+  bot.pointTo(pose::Pos(46, -24), 3);
+  
+  bot.drive(fwd, 40, velocityUnits::pct);
+  wait(0.5, sec);
+  intake::stop(brake);
+  wait(0.5, sec);
+
+  intake::scoreLongGoal(100);
+  wait(1, sec);
+
+  bot.stop(coast);
+  intake::stop(coast);
+  aligner.setTo(false);
+
+
+  // Grab 3 blocks
+  bot.drive(reverse, 12, 50);
+
+  bot.pointTo(pose::Pos(24, -24), 5);
+  intake::store(100);
+  bot.drive(fwd, 36, 60);
+
+
+  // Score low goal
+  bot.pointTo(pose::Pos(10, -11), 3);
+  bot.driveTo(pose::Pos(10, -11));
+
+  intake::scoreLowGoal(100);
+  wait(1.5, sec);
+  intake::stop(coast);
+
+  
+  // Goal rush
+  bot.drive(reverse, 35, 100);
+  bot.turnTo(180, 5);
+  wing.setTo(false);
+  bot.driveTo(pose::Pos(36, -8));
+
+  wait(1000, sec);
 }
 
 void auton::winpoint() {
+  printl("Winpoint!");
 
   // First match loader
   bot.driveTo(pose::Pos(-46, -48));
@@ -191,12 +237,15 @@ void auton::winpoint() {
 }
 
 void auton::twoInch() {
+  printl("Two Inch!");
+
   bot.drive(fwd, 2, 20);
 
   wait(15, sec);
 }
 
 void auton::skills() {
+  printl("Skills!");
 
   // First match loader
   bot.driveTo(pose::Pos(-46, -48));
@@ -351,6 +400,7 @@ void auton::skills() {
 }
 
 void auton::skillsMid() {
+  printl("Skills!");
 
   // Score 2 in lower middle goal
   /*bot.turnTo(210, 2);
@@ -370,12 +420,17 @@ void auton::skillsMid() {
   // First match loader
   bot.driveTo(pose::Pos(46, -48));
   matchLoadMech.setTo(true);
-  bot.turnTo(0, 2);
-
   intake::store(100);
 
+  bot.turnTo(0, 2);
+
   bot.drive(fwd, 40, velocityUnits::pct);
-  wait(2, sec);
+  wait(0.4, sec);
+  bot.drive(reverse, 100, velocityUnits::pct);
+  wait(100, msec);
+  bot.drive(fwd, 5, velocityUnits::pct);
+  wait(1.5, sec);
+
 
   bot.stop();
   bot.drive(reverse, 13, 60);
@@ -406,7 +461,12 @@ void auton::skillsMid() {
   bot.turnTo(180, 2);
 
   bot.drive(fwd, 40, velocityUnits::pct);
-  wait(2, sec);
+  wait(0.4, sec);
+  bot.drive(reverse, 100, velocityUnits::pct);
+  wait(100, msec);
+  bot.drive(fwd, 5, velocityUnits::pct);
+  wait(1.5, sec);
+
 
   bot.stop();
   bot.driveTo(pose::Pos(48, 48));
@@ -425,7 +485,7 @@ void auton::skillsMid() {
 
 
   // Score in right long goal
-  bot.turnTo(0, 3);
+  bot.pointTo(pose::Pos(49, 24), 3);
 
   intake::stop(brake);
   
@@ -436,7 +496,6 @@ void auton::skillsMid() {
   wait(4.5, sec);
 
   bot.stop(coast);
-  intake::stop(coast);
   aligner.setTo(false);
 
 
@@ -477,10 +536,11 @@ void auton::skillsMid() {
     pose::odom::setPose(pose::calcPoseDist()); // distance reset
     wait(30, msec);
   */
-  bot.driveTo(pose::Pos(48, 44), pose::Pos(3, 3));
+  bot.driveTo(pose::Pos(48, 42));
 
   bot.turnTo(90, 2);
-  bot.drive(fwd, 72, 100);
+  bot.driveTo(pose::Pos(-30, 42));
+  intake::stop(coast);
 
   bot.pointTo(pose::Pos(-48, 48), 3);
   pose::odom::setPose(pose::calcPoseDist()); // distance reset
@@ -504,14 +564,19 @@ void auton::skillsMid() {
 
   
   // Third match loader
-  bot.driveTo(pose::Pos(-48, 48));
+  bot.driveTo(pose::Pos(-47, 48));
   matchLoadMech.setTo(true);
-  bot.turnTo(180, 2);
-
   intake::store(100);
 
+  bot.turnTo(180, 2);
+
   bot.drive(fwd, 40, velocityUnits::pct);
-  wait(2, sec);
+  wait(0.4, sec);
+  bot.drive(reverse, 100, velocityUnits::pct);
+  wait(100, msec);
+  bot.drive(fwd, 5, velocityUnits::pct);
+  wait(1.5, sec);
+
 
   bot.stop();
   bot.drive(reverse, 13, 60);
@@ -522,18 +587,18 @@ void auton::skillsMid() {
 
 
   // Drive to long goal
-  bot.pointTo(pose::Pos(-26, 24), 5);
+  bot.pointTo(pose::Pos(-24, 24), 5);
   intake::store(100);
-  bot.driveTo(pose::Pos(-26, 24));
+  bot.driveTo(pose::Pos(-24, 24));
 
-  bot.pointTo(pose::Pos(-24, -28), 5);
-  bot.driveTo(pose::Pos(-24, -28));
+  bot.pointTo(pose::Pos(-28, -28), 5);
+  bot.driveTo(pose::Pos(-28, -28));
   bot.turnTo(0, 5);
   pose::odom::setPose(pose::calcPoseDist()); // distance reset
   wait(30, msec);
 
-  bot.pointTo(pose::Pos(-47, -40), 5);
-  bot.driveTo(pose::Pos(-47, -40));
+  bot.pointTo(pose::Pos(-46, -40), 5);
+  bot.driveTo(pose::Pos(-46, -40));
 
   
   // Score in left long goal
@@ -544,13 +609,13 @@ void auton::skillsMid() {
 
   redirect.setTo(false); // set early to avoid jams
   aligner.setTo(true);
-  bot.turnTo(180, 5);
+  bot.pointTo(pose::Pos(-47, -24), 3);
 
   bot.drive(fwd, 40, velocityUnits::pct);
   wait(1, sec);
 
   intake::scoreLongGoal(100);
-  wait(5, sec);
+  wait(4.5, sec);
 
   bot.stop();
   intake::stop(coast);
@@ -558,14 +623,18 @@ void auton::skillsMid() {
 
 
   // Fourth match loader
-  bot.driveTo(pose::Pos(-48, -48));
+  bot.driveTo(pose::Pos(-47, -48));
   matchLoadMech.setTo(true);
-  bot.turnTo(0, 2);
-
   intake::store(100);
 
+  bot.turnTo(0, 2);
+
   bot.drive(fwd, 40, velocityUnits::pct);
-  wait(2, sec);
+  wait(0.4, sec);
+  bot.drive(reverse, 100, velocityUnits::pct);
+  wait(100, msec);
+  bot.drive(fwd, 5, velocityUnits::pct);
+  wait(1.5, sec);
 
   bot.stop();
   bot.drive(reverse, 13, 60);
@@ -573,27 +642,40 @@ void auton::skillsMid() {
   matchLoadMech.setTo(false);
   wait(100, msec);
 
+  bot.driveTo(pose::Pos(-48, -46));
   
-  // Park!
-  bot.driveTo(pose::Pos(-48, -48));
 
+  // Hard Park
   bot.pointTo(pose::Pos(-24, -62), 3);
   bot.driveTo(pose::Pos(-24, -62));
   odomRetract.setTo(false);
 
-  leftDrive.spin(fwd, 40, pct); // Manual curve to position the robot along wall
-  rightDrive.spin(fwd, 55, pct);
+  bot.turnTo(295, 3);
+  leftDrive.spin(fwd, 38, pct); // Manual curve to position the robot along wall
+  rightDrive.spin(fwd, 70, pct);
 
-  wait(400, msec);
+  wait(1000, msec);
   bot.stop(coast);
   
   intake::store(100);
 
-  bot.drive(reverse, 8, 100);
+  bot.drive(reverse, 12, 50);
   bot.drive(fwd, 60, 100);
 
   wait(5, sec);
   intake::stop(coast);
+
+  
+  // Easy park
+  /*
+  bot.turnTo(270, 2);
+  bot.driveTo(pose::Pos(0, -36));
+
+  odomRetract.setTo(false);
+
+  bot.turnTo(180, 2);
+  bot.drive(reverse, 36, 100);*/
+  
 
   wait(1000, sec);
 }

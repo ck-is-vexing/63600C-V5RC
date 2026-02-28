@@ -40,7 +40,7 @@ class Drivebase {
      * @param inches Amount of inches to drive
      * @param velocityPercent Percent from 0 to 100
      */
-    void drive(vex::directionType direction, double inches, int velocityPercent = 60);
+    void drive(vex::directionType direction, double inches, int velocityPercent = 60, vex::brakeType stoppingType = vex::brakeType::brake);
 
     /**
      * @brief Drive the robot with a constant speed

@@ -19,17 +19,17 @@ namespace {
 Drivebase::Drivebase(vex::motor_group& leftMotors, vex::motor_group& rightMotors, vex::brain& robotBrain, vex::inertial& inertialSensor, vex::gps& GPSSensor) 
 : ld(leftMotors), rd(rightMotors), br(robotBrain), inert(inertialSensor), gps(GPSSensor),
   headingPID(0.55, 0.0001, 20, 10, true), // 0.57 0 16
-  drivePID(2.8, 0.0001, 10, 10) {}
+  drivePID(2.8, 0.0002, 10, 10) {} // 0.0001 for skills?
 
-void Drivebase::drive(vex::directionType direction, double inches, int velocityPercent) {
+void Drivebase::drive(vex::directionType direction, double inches, int velocityPercent, vex::brakeType stoppingType) {
 
   double motorDegrees = inches / (INCH_CONVERSION);
 
   ld.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct, false);
   rd.spinFor(direction, motorDegrees, deg, velocityPercent, velocityUnits::pct);
 
-  ld.stop(brake);
-  rd.stop(brake);
+  ld.stop(stoppingType);
+  rd.stop(stoppingType);
 }
 
 void Drivebase::drive(vex::directionType direction, int velocity, vex::velocityUnits velocityUnit) {
